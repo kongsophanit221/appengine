@@ -1,0 +1,312 @@
+package soteca.com.genisysandroid.framwork.model
+
+import org.simpleframework.xml.*
+import org.simpleframework.xml.convert.Convert
+import org.simpleframework.xml.convert.Converter
+import org.simpleframework.xml.core.Persister
+import org.simpleframework.xml.stream.InputNode
+import org.simpleframework.xml.stream.OutputNode
+import soteca.com.genisysandroid.framwork.helper.crmFormatToDate
+import soteca.com.genisysandroid.framwork.helper.crmFormatToString
+import java.util.*
+
+/****
+ *
+ * Created by sophanit on 6/8/18.
+ */
+
+@Root(strict = false)
+data class EntityCollection(
+        @field:Element(name = "EntityName")
+        var entityName: String? = null,
+
+        @field:Element(name = "MoreRecords")
+        var moreRecords: Boolean? = false,
+
+        @field:Element(name = "PagingCookie")
+        var pagingCookie: String? = "",
+
+        @field:Element(name = "TotalRecordCount")
+        var totalRecordCount: Int? = 0,
+
+        @field:Path("Entities")
+        @field:ElementList(entry = "Entity", inline = true, required = false)
+        var entityList: ArrayList<Entity>? = null
+) {
+
+    @Root(strict = false)
+    data class Entity(
+
+            @field:Element(name = "Attributes")
+            @field:Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
+            var attribute: EntityCollection.Attribute,
+
+            @field:Element(name = "Id")
+            @field:Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
+            var id: String? = null,
+
+            @field:Element(name = "LogicalName")
+            @field:Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
+            var logicalName: String? = null
+    )
+//    {
+//        override fun toString(): String {
+//            val keyValuePair = keyValuePairList ?: ArrayList<KeyValuePairOfstringanyType>()
+//            var keyValueString = ""
+//            keyValuePair.forEach {
+//                keyValueString += it.toString()
+//            }
+//
+//            return "id: ${id} logicalName: ${logicalName}, Size: ${keyValuePairList!!.size}, Value: ${keyValueString}"
+//        }
+//    }
+
+    @Root(strict = false)
+    @Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic", prefix = "c")
+    data class Attribute(
+            @field:ElementList(entry = "KeyValuePairOfstringanyType", inline = true, required = false)
+            @field:Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
+            var keyValuePairList: ArrayList<KeyValuePairOfstringanyType>? = null
+    )
+
+    @Root(strict = false)
+    @Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
+    data class KeyValuePairOfstringanyType(
+            @field:Element(name = "key", required = false)
+            @field:Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic")
+            var key: String? = null,
+
+            @field:Element(name = "value", required = false)
+            @field:Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic")
+            private var valueType: Value? = null)
+    {
+        val value: ValueType?
+            get() = valueType!!.value
+
+        override fun toString(): String {
+            return "key: ${key} value:${value!!.associatedValue}"
+        }
+    }
+
+    @Convert(value = ValueConverter::class)
+    @Root(name = "value", strict = false)
+    data class Value(
+            var value: ValueType? = null
+    )
+
+    sealed class ValueType {
+        class optionSetValue(val value: String) : ValueType()
+        class dateTime(val value: Date) : ValueType()
+        class boolean(val value: Boolean) : ValueType()
+        class guid(val value: String) : ValueType()
+        class string(val value: String) : ValueType()
+        class int(val value: Int) : ValueType()
+        class decimal(val value: Double) : ValueType()
+        class long(val value: Long) : ValueType()
+        class double(val value: Double) : ValueType()
+        class money(val value: Double) : ValueType()
+        class data(val value: String) : ValueType()
+        class entityReference(val value: EntityReference) : ValueType()
+        class entityCollection(val value: EntityCollection) : ValueType()
+        class aliasedValue(val value: String) : ValueType()
+
+        val associatedValue: Any
+            get() {
+                when (this) {
+                    is optionSetValue -> return value
+                    is dateTime -> return value
+                    is boolean -> return value
+                    is guid -> return value
+                    is string -> return value
+                    is int -> return value
+                    is decimal -> return value
+                    is long -> return value
+                    is double -> return value
+                    is money -> return value
+                    is data -> return value
+                    is entityReference -> return value
+                    is entityCollection -> return value
+                    is aliasedValue -> return value
+                }
+            }
+    }
+
+    enum class Type(val value: String) {
+        OPTION_SET_VALUE("b:OptionSetValue"),
+        DATE_TIME("d:dateTime"),
+        BOOLEAN("d:boolean"),
+        BOOLEAN_MANAGED_PROPERTY("BooleanManagedProperty"),
+        GUID("d:guid"),
+        STRING("d:string"),
+        INT("d:int"),
+        DOUBLE("d:double"),
+        DECIMAL("d:decimal"),
+        LONG("long"),
+        MONEY("b:Money"),
+        ENTITY_REFERENCE("b:EntityReference"),
+        ENTITY_COLLECTION("b:EntityCollection"),
+        ALIASED_VALUE("AliasedValue"),
+        DATA("base64Binary");
+
+        companion object {
+            fun from(findValue: String): Type = Type.values().first { it.value == findValue }
+        }
+    }
+
+    class ValueConverter : Converter<Value> {
+
+        override fun write(node: OutputNode?, value: Value?) {
+            value?.let {
+                when (it.value!!) {
+
+                    is ValueType.boolean -> {
+                        node!!.setAttribute("i:type", Type.BOOLEAN.value)
+                        node.namespaces.setReference("http://www.w3.org/2001/XMLSchema", "d")
+                        node.value = ((it.value as ValueType.boolean).value).toString()
+                    }
+
+                    is EntityCollection.ValueType.optionSetValue -> {
+
+                        node!!.setAttribute("i:type", Type.OPTION_SET_VALUE.value)
+                        val nodeContainer = node.getChild("Value")
+                        nodeContainer.namespaces.setReference("http://schemas.microsoft.com/xrm/2011/Contracts")
+                        nodeContainer.value = (it.value as ValueType.optionSetValue).value
+                    }
+
+                    is EntityCollection.ValueType.dateTime -> {
+                        node!!.namespaces.setReference("http://schemas.microsoft.com/2003/10/Serialization/", "d")
+                        node.setAttribute("i:type", Type.DATE_TIME.value)
+                        node.value = ((it.value as ValueType.dateTime).value).crmFormatToString()
+                    }
+
+                    is EntityCollection.ValueType.guid -> {
+                        node!!.namespaces.setReference("http://schemas.microsoft.com/2003/10/Serialization/", "d")
+                        node.setAttribute("i:type", Type.GUID.value)
+                        node.value = (it.value as ValueType.guid).value
+                    }
+
+                    is EntityCollection.ValueType.string -> {
+                        node!!.namespaces.setReference("http://www.w3.org/2001/XMLSchema", "d")
+                        node.setAttribute("i:type", Type.STRING.value)
+                        node.value = (it.value as ValueType.string).value
+
+                    }
+
+                    is EntityCollection.ValueType.int -> {
+                        node!!.namespaces.setReference("http://www.w3.org/2001/XMLSchema", "d")
+                        node.setAttribute("i:type", Type.ENTITY_COLLECTION.value)
+                        node.value = (it.value as ValueType.int).value.toString()
+                    }
+
+                    is EntityCollection.ValueType.decimal -> {
+                        node!!.namespaces.setReference("http://www.w3.org/2001/XMLSchema", "d")
+                        node.setAttribute("i:type",Type.DECIMAL.value)
+                        node.value = (it.value as ValueType.decimal).value.toString()
+                    }
+
+                    is EntityCollection.ValueType.long -> {
+                        node!!.namespaces.setReference("http://www.w3.org/2001/XMLSchema", "d")
+                        node.setAttribute("i:type", Type.LONG.value)
+                        node.value = (it.value as ValueType.long).value.toString()
+                    }
+
+                    is EntityCollection.ValueType.double -> {
+                        node!!.namespaces.setReference("http://www.w3.org/2001/XMLSchema", "d")
+                        node.setAttribute("i:type", Type.DOUBLE.value)
+                        node.value = (it.value as ValueType.double).value.toString()
+                    }
+
+                    is EntityCollection.ValueType.money -> {
+
+                        node!!.setAttribute("i:type", Type.MONEY.value)
+                        val nodeContainer = node.getChild("Value")
+                        nodeContainer.namespaces.setReference("http://schemas.microsoft.com/xrm/2011/Contracts")
+                        nodeContainer.value = (it.value as ValueType.money).value.toString()
+
+                    }
+
+                    is EntityCollection.ValueType.entityReference -> TODO()
+
+                    is EntityCollection.ValueType.aliasedValue -> TODO()
+
+                    is EntityCollection.ValueType.data -> TODO()
+
+                    else -> {
+                    }
+                }
+
+            }
+        }
+
+        override fun read(node: InputNode?): Value {
+
+            val type = node!!.getAttribute("type").value
+            val value = Value()
+            val valueType = Type.from(type)
+
+            when (valueType) {
+                Type.OPTION_SET_VALUE -> {
+                    value.value = EntityCollection.ValueType.optionSetValue(node.getNext("Value").value)
+                }
+                Type.DATE_TIME -> {
+                    value.value = EntityCollection.ValueType.dateTime(node.value.crmFormatToDate())
+                }
+                Type.BOOLEAN -> {
+                    value.value = EntityCollection.ValueType.boolean(node.value!!.toBoolean())
+                }
+                Type.DOUBLE -> {
+                    value.value = EntityCollection.ValueType.double(node.value.toDouble())
+                }
+                Type.DECIMAL -> {
+                    value.value = EntityCollection.ValueType.decimal(node.value.toDouble())
+                }
+                Type.GUID -> {
+                    value.value = EntityCollection.ValueType.guid(node.value)
+                }
+                Type.INT -> {
+                    value.value = EntityCollection.ValueType.int(node.value.toInt())
+                }
+                Type.STRING -> {
+                    value.value = EntityCollection.ValueType.string(node.value)
+                }
+                Type.ENTITY_REFERENCE -> {
+                    val serializer = Persister()
+                    val entityReference = serializer.read(EntityReference::class.java, node)
+                    value.value = EntityCollection.ValueType.entityReference(entityReference)
+                }
+                Type.LONG -> {
+                    value.value = EntityCollection.ValueType.long(node.value.toLong())
+                }
+                Type.MONEY -> {
+                    value.value = EntityCollection.ValueType.money(node.getNext("Value").value.toDouble())
+                }
+                Type.ENTITY_COLLECTION -> {
+                    val serializer = Persister()
+                    val entityCollection = serializer.read(EntityCollection::class.java, node)
+                    value.value = EntityCollection.ValueType.entityCollection(entityCollection)
+                }
+                Type.ALIASED_VALUE -> {
+                    value.value = EntityCollection.ValueType.aliasedValue(node.getNext("Value").value)
+                }
+                Type.DATA -> {
+                    value.value = EntityCollection.ValueType.data(node.value)
+                }
+                Type.BOOLEAN_MANAGED_PROPERTY -> ""
+            }
+            return value
+        }
+    }
+}
+
+
+@Root(strict = false)
+data class EntityReference(
+        @field:Element(name = "Id", required = false)
+        var id: String? = null,
+
+        @field:Element(name = "LogicalName", required = false)
+        var logicalName: String? = null,
+
+        @field:Element(name = "Name", required = false)
+        var name: String? = null
+)
