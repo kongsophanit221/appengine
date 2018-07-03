@@ -1,14 +1,36 @@
 package com.soteca.loyaltyuserengine.model
 
-class CartItem : OrderItem {
-    // TODO: field Product
-    // TODO: field Package
-    // TODO: constructor (product, quantity)
-    // TODO: constructor (package, quantity)
+class CartItem() {
 
-    private var quantity: Int = 0
+    var product: ProductItem? = null
+    var package_: PackageItem? = null
+    var quantity: Int = 0
 
-    constructor(quantity: Int) : super(quantity) {
+    val amount: Float? //auto calculate
+        get() {
+            product?.let {
+                return product!!.price * quantity
+            } ?: run {
+                return return package_!!.price * quantity
+            }
+        }
+
+    val name: String?
+        get() {
+            product?.let {
+                return product!!.name
+            } ?: run {
+                return package_!!.name
+            }
+        }
+
+    constructor(product: ProductItem, quantity: Int) : this() {
+        this.product = product
+        this.quantity = quantity
+    }
+
+    constructor(package_: PackageItem, quantity: Int) : this() {
+        this.package_ = package_
         this.quantity = quantity
     }
 }

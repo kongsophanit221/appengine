@@ -61,8 +61,39 @@ class DynamicsConnector(private val ctx: Context) {
         authenticator = Authenticator(ctx, configuration)
 
         try {
-
             authenticator!!.authenticate()
+
+            this.whoAmI { identifier, errors ->
+
+                if (identifier != null) {
+
+                    val userIdentify = identifier
+
+                    this.retrieveUserPrivileges(userIdentify.userId, { rolePrivileges, error ->
+
+                        if (error == null) {
+                            val user = DynamicsUser(ctx)
+                            user.userIdentify = userIdentify
+                            user.userRolePrivileges = rolePrivileges
+
+                            val userIdentifyDataHashMap = userIdentify.toHashMap()
+                            val userIdentifyData = userIdentify.toJSONObject(userIdentifyDataHashMap)
+                            var userRoleJSONObjects = ArrayList<String>()
+
+                            rolePrivileges!!.forEach {
+                                userRoleJSONObjects.add(it.toJSONObject().toString())
+                            }
+
+                            val userInformation = hashMapOf("USER_IDENTIFY" to userIdentifyData, "USER_ROLEPRIVILEGE" to userRoleJSONObjects)
+                            SharedPreferenceHelper.getInstance(ctx).setUserInformation(userInformation)
+
+                            done(user, error)
+                        } else {
+                            Log.e(TAG, "Error $error")
+                        }
+                    })
+                }
+            }
 
         } catch (ex: Exception) {
             Log.d(TAG, "ex: " + ex.localizedMessage)

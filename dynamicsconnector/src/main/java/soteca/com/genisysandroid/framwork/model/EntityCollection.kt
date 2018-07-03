@@ -9,6 +9,7 @@ import org.simpleframework.xml.stream.OutputNode
 import soteca.com.genisysandroid.framwork.helper.crmFormatToDate
 import soteca.com.genisysandroid.framwork.helper.crmFormatToString
 import java.util.*
+import kotlin.collections.ArrayList
 
 /****
  *
