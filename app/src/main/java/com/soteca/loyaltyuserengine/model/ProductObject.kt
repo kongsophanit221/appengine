@@ -1,4 +1,4 @@
-package com.soteca.loyaltyuserengine
+package com.soteca.loyaltyuserengine.model
 
 class ProductObject(
         var items: ArrayList<Products>? = null
