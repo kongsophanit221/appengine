@@ -11,7 +11,7 @@ class CartItem() {
             product?.let {
                 return product!!.price * quantity
             } ?: run {
-                return return package_!!.price * quantity
+                return package_!!.price * quantity
             }
         }
 

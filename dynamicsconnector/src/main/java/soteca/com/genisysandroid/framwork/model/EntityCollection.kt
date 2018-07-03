@@ -64,11 +64,29 @@ data class EntityCollection(
 
     @Root(strict = false)
     @Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic", prefix = "c")
-    data class Attribute(
+    class Attribute(
             @field:ElementList(entry = "KeyValuePairOfstringanyType", inline = true, required = false)
             @field:Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
-            var keyValuePairList: ArrayList<KeyValuePairOfstringanyType>? = null
-    )
+            private var keyValuePairList: ArrayList<KeyValuePairOfstringanyType>? = null
+    ) {
+        operator fun get(key: String): ValueType? {
+            return keyValuePairList!!.filter {
+                it.key == key
+            }.single().value
+        }
+
+        operator fun set(key: String, value: ValueType?) {
+            keyValuePairList!!.add(KeyValuePairOfstringanyType(key, Value(value)))
+        }
+
+        fun of(vararg pairs: Pair<String, ValueType>): Attribute {
+            var kvList = ArrayList<KeyValuePairOfstringanyType>()
+            pairs.forEach {
+                kvList.add(KeyValuePairOfstringanyType(it.first, Value(it.second)))
+            }
+            return Attribute(kvList)
+        }
+    }
 
     @Root(strict = false)
     @Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
@@ -79,8 +97,7 @@ data class EntityCollection(
 
             @field:Element(name = "value", required = false)
             @field:Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic")
-            private var valueType: Value? = null)
-    {
+            private var valueType: Value? = null) {
         val value: ValueType?
             get() = valueType!!.value
 
@@ -201,7 +218,7 @@ data class EntityCollection(
 
                     is EntityCollection.ValueType.decimal -> {
                         node!!.namespaces.setReference("http://www.w3.org/2001/XMLSchema", "d")
-                        node.setAttribute("i:type",Type.DECIMAL.value)
+                        node.setAttribute("i:type", Type.DECIMAL.value)
                         node.value = (it.value as ValueType.decimal).value.toString()
                     }
 
@@ -233,6 +250,7 @@ data class EntityCollection(
                     is EntityCollection.ValueType.data -> TODO()
 
                     else -> {
+
                     }
                 }
 

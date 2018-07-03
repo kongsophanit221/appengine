@@ -8,18 +8,17 @@ import soteca.com.genisysandroid.framwork.networking.Errors
 
 abstract class BaseItem {
 
-    constructor(data: ArrayList<EntityCollection.KeyValuePairOfstringanyType>)
+    constructor(data: EntityCollection.Attribute)
 
-    val keyValuePairs: ArrayList<EntityCollection.KeyValuePairOfstringanyType>? = null
+    val keyValuePairs: EntityCollection.Attribute? = null
         get
 }
 
 interface AppDatasource {
 
-    fun <T> get(type: T, fetchExpression: FetchExpression, handler: (T?, Errors?) -> Void) where T : BaseItem
+    fun <T : BaseItem> get(type: T, fetchExpression: FetchExpression, handler: (T?, Errors?) -> Void)
 
-    fun <T> getMultiple(type: T, fetchExpression: FetchExpression,
-                        handler: (ArrayList<T>?, Errors?) -> Void) where T : BaseItem
+    fun <T : BaseItem> getMultiple(type: T, fetchExpression: FetchExpression, handler: (ArrayList<T>?, Errors?) -> Void)
 }
 
 // temporary, datasource from online
