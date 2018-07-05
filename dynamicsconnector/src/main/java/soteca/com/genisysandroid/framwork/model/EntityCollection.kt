@@ -1,13 +1,16 @@
 package soteca.com.genisysandroid.framwork.model
 
 import org.simpleframework.xml.*
+import org.simpleframework.xml.convert.AnnotationStrategy
 import org.simpleframework.xml.convert.Convert
 import org.simpleframework.xml.convert.Converter
 import org.simpleframework.xml.core.Persister
+import org.simpleframework.xml.stream.Format
 import org.simpleframework.xml.stream.InputNode
 import org.simpleframework.xml.stream.OutputNode
 import soteca.com.genisysandroid.framwork.helper.crmFormatToDate
 import soteca.com.genisysandroid.framwork.helper.crmFormatToString
+import java.io.ByteArrayOutputStream
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -235,15 +238,28 @@ data class EntityCollection(
                     }
 
                     is EntityCollection.ValueType.money -> {
-
                         node!!.setAttribute("i:type", Type.MONEY.value)
                         val nodeContainer = node.getChild("Value")
                         nodeContainer.namespaces.setReference("http://schemas.microsoft.com/xrm/2011/Contracts")
                         nodeContainer.value = (it.value as ValueType.money).value.toString()
-
                     }
 
-                    is EntityCollection.ValueType.entityReference -> TODO()
+                    is EntityCollection.ValueType.entityReference -> {
+                        node!!.setAttribute("i:type", Type.ENTITY_REFERENCE.value)
+
+                        val entityReference = (it.value as ValueType.entityReference).value
+                        val nodeId = node.getChild("Id")
+                        nodeId.reference = "http://schemas.microsoft.com/xrm/2011/Contracts"
+                        nodeId.value = entityReference.id
+
+                        val nodeLogicalName = node.getChild("LogicalName")
+                        nodeLogicalName.reference = "http://schemas.microsoft.com/xrm/2011/Contracts"
+                        nodeLogicalName.value = entityReference.logicalName
+
+                        val nodeName = node.getChild("Name")
+                        nodeName.reference = "http://schemas.microsoft.com/xrm/2011/Contracts"
+                        nodeName.value = entityReference.name
+                    }
 
                     is EntityCollection.ValueType.aliasedValue -> TODO()
 
