@@ -2,7 +2,7 @@ package com.soteca.loyaltyuserengine.model
 
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 
-class BundleProduct() : Product() {
+class BundleProduct() : ProductAbstract() {
 
     private var _id: String = ""
     private var _name: String = ""
@@ -11,12 +11,12 @@ class BundleProduct() : Product() {
     private var _image: String? = null
 
 
-    private var products: ArrayList<Product>? = null
-    private var customProducts: HashMap<String, ArrayList<Product>>? = null
+    private var products: ArrayList<ProductAbstract>? = null
+    private var customProducts: HashMap<String, ArrayList<ProductAbstract>>? = null
 
-    val customProductsSelect: HashMap<String, Product>
+    val customProductsSelect: HashMap<String, ProductAbstract>
         get() {
-            var tem = HashMap<String, Product>()
+            var tem = HashMap<String, ProductAbstract>()
             customProducts?.let {
                 it.forEach {
                     tem[it.key] = it.value.filter { it.isChoose == true }.single()

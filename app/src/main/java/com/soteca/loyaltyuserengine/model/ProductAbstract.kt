@@ -1,8 +1,6 @@
 package com.soteca.loyaltyuserengine.model
 
-import soteca.com.genisysandroid.framwork.model.EntityCollection
-
-abstract class Product() {
+abstract class ProductAbstract() {
 
     abstract val id: String
         get

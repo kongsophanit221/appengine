@@ -6,6 +6,6 @@ class ProductGroup {
     var name: String = ""
     var image: String = ""
 
-    private var products: ArrayList<Product>? = null
+    private var products: ArrayList<ProductAbstract>? = null
 
 }

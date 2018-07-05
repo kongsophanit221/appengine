@@ -3,7 +3,7 @@ package com.soteca.loyaltyuserengine.model
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import java.util.*
 
-class CartOrder() : Order() {
+class CartOrder() : OrderAbstract() {
 
     private var _id: String = ""
     private var _orderItems: ArrayList<CartItem>? = null

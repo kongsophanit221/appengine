@@ -2,7 +2,7 @@ package com.soteca.loyaltyuserengine.model
 
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 
-class SingleProduct() : Product() {
+class SingleProduct() : ProductAbstract() {
 
     private var _id: String = ""
     private var _name: String = ""

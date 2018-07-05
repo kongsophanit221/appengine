@@ -4,7 +4,7 @@ import soteca.com.genisysandroid.framwork.model.EntityCollection
 import java.util.*
 import kotlin.collections.ArrayList
 
-class HistoryOrder() : Order() {
+class HistoryOrder() : OrderAbstract() {
 
     private var _id: String = ""
     var date: Date? = null

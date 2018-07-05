@@ -1,6 +1,6 @@
 package com.soteca.loyaltyuserengine.model
 
-abstract class Order {
+abstract class OrderAbstract {
     abstract val id: String
         get
     abstract val orderItems: ArrayList<CartItem>
