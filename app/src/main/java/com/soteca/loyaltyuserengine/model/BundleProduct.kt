@@ -2,7 +2,7 @@ package com.soteca.loyaltyuserengine.model
 
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 
-class BundleProduct() : ProductAbstract() {
+class BundleProduct(attribute: EntityCollection.Attribute) : ProductAbstract(attribute) {
 
     private var _id: String = ""
     private var _name: String = ""
@@ -25,13 +25,13 @@ class BundleProduct() : ProductAbstract() {
             return tem
         }
 
-    constructor(attribute: EntityCollection.Attribute) : this() {
-        _id = attribute!!["id"]!!.associatedValue as String
-        _name = attribute!!["name"]!!.associatedValue as String
-        _price = attribute!!["price"]!!.associatedValue as Double
-        _description = attribute!!["description"]!!.associatedValue as String
-        _image = attribute!!["image"]!!.associatedValue as String
-    }
+//    constructor(attribute: EntityCollection.Attribute) : super(attribute) {
+//        _id = attribute!!["id"]!!.associatedValue as String
+//        _name = attribute!!["name"]!!.associatedValue as String
+//        _price = attribute!!["price"]!!.associatedValue as Double
+//        _description = attribute!!["description"]!!.associatedValue as String
+//        _image = attribute!!["image"]!!.associatedValue as String
+//    }
 
     override val id: String
         get() = _id
@@ -41,8 +41,6 @@ class BundleProduct() : ProductAbstract() {
         get() = _price
     override val image: String
         get() = _image!!
-    override val description: String
-        get() = _description!!
     override val isChoose: Boolean?
         get() = null
 }

@@ -9,7 +9,6 @@ class CartItem() {
     val amount: Double
         get() = product!!.price * quantity
 
-
     constructor(product: ProductAbstract, quantity: Int) : this() {
         this.product = product
         this.quantity = quantity

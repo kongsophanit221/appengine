@@ -32,13 +32,10 @@ class Datasource(val context: Context) : AppDatasource {
                 handler(null, errors)
                 return@retrieveMultiple
             }
-
             var data: BaseItem? = null
 
             when (type) {
-                is BaseItem -> {
-//                    data = BaseItem(entityCollection!!.entityList!!.first().attribute.keyValuePairList!!)
-                }
+
             }
 
             handler(data as T, null)
