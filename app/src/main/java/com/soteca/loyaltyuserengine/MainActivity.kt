@@ -2,7 +2,10 @@ package com.soteca.loyaltyuserengine
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
+import com.soteca.loyaltyuserengine.model.AuxiliaryProduct
 import com.soteca.loyaltyuserengine.model.Datasource
+import com.soteca.loyaltyuserengine.model.ProductGroup
 import com.soteca.loyaltyuserengine.model.SingleProduct
 import soteca.com.genisysandroid.framwork.connector.DynamicsConfiguration
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
@@ -25,6 +28,10 @@ class MainActivity : AppCompatActivity() {
             Datasource(this@MainActivity).getMultiple(SingleProduct(), FetchExpression(FetchExpression.Entity("idcrm_posproduct")), { singleProducts: ArrayList<SingleProduct>?, errors: Errors? ->
 
             })
+
+            /*Datasource(this).getMultiple(ProductGroup(), FetchExpression(FetchExpression.Entity("idcrm_poscategory"))) { productGroup: ArrayList<ProductGroup>?, errors: Errors? ->
+
+            }*/
         }
     }
 }

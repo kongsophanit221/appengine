@@ -57,6 +57,11 @@ class Datasource(val context: Context) : AppDatasource {
                         Log.d("tBaseItem", singleProduct.toString())
                         data.add(singleProduct as T)
                     }
+                    is ProductGroup -> {
+                        val productGroup = ProductGroup(it.attribute!!)
+                        Log.d("tBaseItem", productGroup.toString())
+                        data.add(productGroup as T)
+                    }
                 }
             }
 
