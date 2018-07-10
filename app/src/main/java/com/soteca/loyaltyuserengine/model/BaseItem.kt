@@ -1,14 +1,17 @@
 package com.soteca.loyaltyuserengine.model
 
 import android.content.Context
-import android.util.Log
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.FetchExpression
 import soteca.com.genisysandroid.framwork.networking.Errors
 
-abstract class BaseItem() {
+open class BaseItem() {
+
     constructor(data: EntityCollection.Attribute) : this()
+
+    open val attributePush: EntityCollection.Attribute? = null
+        get
 }
 
 interface AppDatasource {
@@ -50,12 +53,23 @@ class Datasource(val context: Context) : AppDatasource {
 
             var data: ArrayList<T> = ArrayList()
 
-            entityCollection!!.entityList!!.forEach {
-                when (type) {
-                    is SingleProduct -> {
-                        val singleProduct = SingleProduct(it.attribute!!)
-                        Log.d("tBaseItem", singleProduct.toString())
-                        data.add(singleProduct as T)
+            when (type) {
+
+                is Product -> {
+
+                    entityCollection!!.entityList!!.forEach {
+
+                        val isBundle = it.attribute!!["idcrm_isbundle"]!!.associatedValue as Boolean
+                        val isBelongToBundle = it.attribute!!["idcrm_belongstobundle"]!!.associatedValue as Boolean
+                        val isAuxiliary = it.attribute!!["idcrm_isauxiliary"]!!.associatedValue as Boolean
+
+                        if (isBundle) {
+                            val product = BundleProduct(it.attribute!!)
+                            data.add(product as T)
+                        } else if (!isBelongToBundle && !isAuxiliary) {
+                            val product = SingleProduct(it.attribute!!)
+                            data.add(product as T)
+                        }
                     }
                 }
             }

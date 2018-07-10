@@ -1,17 +1,11 @@
 package com.soteca.loyaltyuserengine.model
 
 import soteca.com.genisysandroid.framwork.model.EntityCollection
+import soteca.com.genisysandroid.framwork.model.EntityReference
 
-class BundleProduct(val attribute: EntityCollection.Attribute) : ProductAbstract(attribute) {
+class BundleProduct(val attribute: EntityCollection.Attribute) : Product(attribute) {
 
-    private var _id: String = ""
-    private var _name: String = ""
-    private var _price: Double = 0.0
-    private var _description: String? = null
-    private var _image: String? = null
-
-
-    private var products: ArrayList<ProductAbstract>? = null
+    var products: ArrayList<Product>? = null
     private var customProducts: HashMap<String, ArrayList<SingleProduct>>? = null
 
     val customProductsSelect: HashMap<String, SingleProduct>
@@ -25,20 +19,40 @@ class BundleProduct(val attribute: EntityCollection.Attribute) : ProductAbstract
             return tem
         }
 
-    override val id: String
-        get() = attribute!!["id"]!!.associatedValue as String
-    override val name: String
-        get() = attribute!!["name"]!!.associatedValue as String
-    override val price: Double
-        get() = attribute!!["price"]!!.associatedValue as Double
-    override val image: String
-        get() = attribute!!["image"]!!.associatedValue as String
-    override val category: String
-        get() = attribute!!["category"]!!.associatedValue as String
-    override val venue: String
-        get() = attribute!!["venue"]!!.associatedValue as String
-    override val min: Double
-        get() = attribute!!["min"]!!.associatedValue as Double
-    override val max: Double
-        get() = attribute!!["max"]!!.associatedValue as Double
+
+    override var id: String = ""
+        get() = attribute!!["idcrm_posproductid"]!!.associatedValue.toString()
+
+    override var name: String = ""
+        get() = attribute!!["idcrm_name"]!!.associatedValue.toString()
+
+    override var price: Double = 0.0
+        get() = attribute!!["idcrm_pricesell"]!!.associatedValue as Double
+
+    override var image: String = ""
+
+    override var category: String = ""
+        get() = (attribute!!["idcrm_category"]!!.associatedValue as EntityReference).name!!
+
+    override var venue: String = ""
+        get() = (attribute!!["idcrm_venue"]!!.associatedValue as EntityReference).name!!
+
+    override var min: Double? = null
+        get() = attribute!!["idcrm_min"]?.let {
+            it.associatedValue as Double
+        }
+
+    override var max: Double? = null
+        get() = attribute!!["idcrm_max"]?.let {
+            it.associatedValue as Double
+        }
+
+    override var bundleId: String? = null
+        get() = attribute!!["idcrm_bundle"]?.let {
+            (it.associatedValue as EntityReference).id
+        }
+
+    override fun toString(): String {
+        return "bundle: " + id + " " + name + " " + price + " " + image + " " + category + " " + venue + " " + min + " " + max + " " + bundleId
+    }
 }

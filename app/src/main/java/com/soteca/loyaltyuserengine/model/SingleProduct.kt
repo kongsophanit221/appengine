@@ -3,7 +3,7 @@ package com.soteca.loyaltyuserengine.model
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
 
-class SingleProduct : ProductAbstract {
+class SingleProduct : Product {
 
     private var attribute: EntityCollection.Attribute? = null
     private var auxiliaryProducts: ArrayList<AuxiliaryProduct>? = null //
@@ -27,36 +27,40 @@ class SingleProduct : ProductAbstract {
         this.attribute = attribute
     }
 
-    override val id: String
+    override var id: String = ""
         get() = attribute!!["idcrm_posproductid"]!!.associatedValue.toString()
-    override val name: String
+
+    override var name: String = ""
         get() = attribute!!["idcrm_name"]!!.associatedValue.toString()
-    override val price: Double
+
+    override var price: Double = 0.0
         get() = attribute!!["idcrm_pricesell"]!!.associatedValue as Double
-    override val image: String
-        get() = ""
-    override val category: String
-        get() {
-            val catRef = attribute!!["idcrm_category"]!!.associatedValue as EntityReference
-            return catRef.toString()
-        }
-    override val venue: String
-        get() {
-            val venueRef = attribute!!["idcrm_venue"]!!.associatedValue as EntityReference
-            return venueRef.toString()
-        }
-    override val min: Double?
+
+    override var image: String = ""
+
+    override var category: String = ""
+        get() = (attribute!!["idcrm_category"]!!.associatedValue as EntityReference).name!!
+
+    override var venue: String = ""
+        get() = (attribute!!["idcrm_venue"]!!.associatedValue as EntityReference).name!!
+
+    override var min: Double? = null
         get() = attribute!!["idcrm_min"]?.let {
             it.associatedValue as Double
         }
 
-    override val max: Double?
+    override var max: Double? = null
         get() = attribute!!["idcrm_max"]?.let {
             it.associatedValue as Double
         }
 
+    override var bundleId: String? = null
+        get() = attribute!!["idcrm_bundle"]?.let {
+            (it.associatedValue as EntityReference).id
+        }
+
     override fun toString(): String {
-        return id + " " + name + " " + price + " " + image + " " + category + " " + venue + " " + min + " " + max
+        return "product: " + id + " " + name + " " + price + " " + image + " " + category + " " + venue + " " + min + " " + max + " " + bundleId
     }
 
 }
