@@ -68,5 +68,5 @@ class AuthenticatorRequest() : Request {
         }
 
     override val timeout: Int
-        get() = 1000
+        get() = 3000
 }

@@ -2,7 +2,7 @@ package com.soteca.loyaltyuserengine.model
 
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 
-class BundleProduct(attribute: EntityCollection.Attribute) : ProductAbstract(attribute) {
+class BundleProduct(val attribute: EntityCollection.Attribute) : ProductAbstract(attribute) {
 
     private var _id: String = ""
     private var _name: String = ""
@@ -12,35 +12,33 @@ class BundleProduct(attribute: EntityCollection.Attribute) : ProductAbstract(att
 
 
     private var products: ArrayList<ProductAbstract>? = null
-    private var customProducts: HashMap<String, ArrayList<ProductAbstract>>? = null
+    private var customProducts: HashMap<String, ArrayList<SingleProduct>>? = null
 
-    val customProductsSelect: HashMap<String, ProductAbstract>
+    val customProductsSelect: HashMap<String, SingleProduct>
         get() {
-            var tem = HashMap<String, ProductAbstract>()
+            var tem = HashMap<String, SingleProduct>()
             customProducts?.let {
                 it.forEach {
-                    tem[it.key] = it.value.filter { it.isChoose == true }.single()
+                    tem[it.key] = it.value.filter { it.isSelect == true }.single()
                 }
             }
             return tem
         }
 
-//    constructor(attribute: EntityCollection.Attribute) : super(attribute) {
-//        _id = attribute!!["id"]!!.associatedValue as String
-//        _name = attribute!!["name"]!!.associatedValue as String
-//        _price = attribute!!["price"]!!.associatedValue as Double
-//        _description = attribute!!["description"]!!.associatedValue as String
-//        _image = attribute!!["image"]!!.associatedValue as String
-//    }
-
     override val id: String
-        get() = _id
+        get() = attribute!!["id"]!!.associatedValue as String
     override val name: String
-        get() = _name
+        get() = attribute!!["name"]!!.associatedValue as String
     override val price: Double
-        get() = _price
+        get() = attribute!!["price"]!!.associatedValue as Double
     override val image: String
-        get() = _image!!
-    override val isChoose: Boolean?
-        get() = null
+        get() = attribute!!["image"]!!.associatedValue as String
+    override val category: String
+        get() = attribute!!["category"]!!.associatedValue as String
+    override val venue: String
+        get() = attribute!!["venue"]!!.associatedValue as String
+    override val min: Double
+        get() = attribute!!["min"]!!.associatedValue as Double
+    override val max: Double
+        get() = attribute!!["max"]!!.associatedValue as Double
 }

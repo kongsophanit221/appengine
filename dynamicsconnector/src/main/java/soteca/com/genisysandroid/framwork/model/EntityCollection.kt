@@ -1,16 +1,13 @@
 package soteca.com.genisysandroid.framwork.model
 
 import org.simpleframework.xml.*
-import org.simpleframework.xml.convert.AnnotationStrategy
 import org.simpleframework.xml.convert.Convert
 import org.simpleframework.xml.convert.Converter
 import org.simpleframework.xml.core.Persister
-import org.simpleframework.xml.stream.Format
 import org.simpleframework.xml.stream.InputNode
 import org.simpleframework.xml.stream.OutputNode
 import soteca.com.genisysandroid.framwork.helper.crmFormatToDate
 import soteca.com.genisysandroid.framwork.helper.crmFormatToString
-import java.io.ByteArrayOutputStream
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -19,7 +16,7 @@ import kotlin.collections.ArrayList
  * Created by sophanit on 6/8/18.
  */
 
-@Root(strict = false)
+@Root(name = "value", strict = false)
 data class EntityCollection(
         @field:Element(name = "EntityName")
         var entityName: String? = null,
@@ -33,23 +30,25 @@ data class EntityCollection(
         @field:Element(name = "TotalRecordCount")
         var totalRecordCount: Int? = 0,
 
-        @field:Path("Entities")
+        @field:Path(value = "Entities")
+        @field:Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
         @field:ElementList(entry = "Entity", inline = true, required = false)
-        var entityList: ArrayList<Entity>? = null
+        var entityList: ArrayList<EntityCollection.Entity>? = null
+
 ) {
 
-    @Root(strict = false)
-    data class Entity(
+    @Root(name = "Entity", strict = false)
+    class Entity(
 
-            @field:Element(name = "Attributes")
+            @field:Element(name = "Attributes", required = false)
             @field:Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
-            var attribute: EntityCollection.Attribute,
+            var attribute: Attribute? = null,
 
-            @field:Element(name = "Id")
+            @field:Element(name = "Id", required = false)
             @field:Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
             var id: String? = null,
 
-            @field:Element(name = "LogicalName")
+            @field:Element(name = "LogicalName", required = false)
             @field:Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
             var logicalName: String? = null
     )
@@ -65,17 +64,24 @@ data class EntityCollection(
 //        }
 //    }
 
-    @Root(strict = false)
-    @Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic", prefix = "c")
+    @Root(name = "Attributes", strict = false)
+    @NamespaceList(
+            Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic"),
+            Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
+    )
     class Attribute(
             @field:ElementList(entry = "KeyValuePairOfstringanyType", inline = true, required = false)
             @field:Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
-            private var keyValuePairList: ArrayList<KeyValuePairOfstringanyType>? = null
+            var keyValuePairList: ArrayList<KeyValuePairOfstringanyType>? = null
     ) {
         operator fun get(key: String): ValueType? {
-            return keyValuePairList!!.filter {
+            val vt = keyValuePairList!!.filter {
                 it.key == key
-            }.single().value
+            }
+            if (vt.size == 0) {
+                return null
+            }
+            return vt.single().value
         }
 
         operator fun set(key: String, value: ValueType?) {
@@ -91,7 +97,7 @@ data class EntityCollection(
         }
     }
 
-    @Root(strict = false)
+    @Root(name = "KeyValuePairOfstringanyType", strict = false)
     @Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
     data class KeyValuePairOfstringanyType(
             @field:Element(name = "key", required = false)

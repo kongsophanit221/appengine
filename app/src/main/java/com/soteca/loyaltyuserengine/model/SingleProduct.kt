@@ -1,20 +1,11 @@
 package com.soteca.loyaltyuserengine.model
 
 import soteca.com.genisysandroid.framwork.model.EntityCollection
+import soteca.com.genisysandroid.framwork.model.EntityReference
 
-class SingleProduct(attribute: EntityCollection.Attribute) : ProductAbstract(attribute) {
+class SingleProduct : ProductAbstract {
 
-    private var _id: String = ""
-    private var _name: String = ""
-    private var _price: Double = 0.0
-    private var _image: String? = null
-
-    private var _category: String? = null
-    private var _referennce: String? = null
-    private var _venue: String? = null
-    private var _min: Double? = null
-    private var _max: Double? = null
-
+    private var attribute: EntityCollection.Attribute? = null
     private var auxiliaryProducts: ArrayList<AuxiliaryProduct>? = null //
 
     val auxiliaryProductsAdd: ArrayList<AuxiliaryProduct>
@@ -28,21 +19,44 @@ class SingleProduct(attribute: EntityCollection.Attribute) : ProductAbstract(att
             return tem
         }
 
-//    constructor(attribute: EntityCollection.Attribute) : this() {
-//        _id = attribute!!["id"]!!.associatedValue as String
-//        _name = attribute!!["name"]!!.associatedValue as String
-//        _price = attribute!!["price"]!!.associatedValue as Double
-//        _image = attribute!!["image"]!!.associatedValue as String
-//    }
+    var isSelect = false //for custom select product from category
+
+    constructor() : super() {}
+
+    constructor(attribute: EntityCollection.Attribute) : super(attribute) {
+        this.attribute = attribute
+    }
 
     override val id: String
-        get() = _id
+        get() = attribute!!["idcrm_posproductid"]!!.associatedValue.toString()
     override val name: String
-        get() = _name
+        get() = attribute!!["idcrm_name"]!!.associatedValue.toString()
     override val price: Double
-        get() = _price
+        get() = attribute!!["idcrm_pricesell"]!!.associatedValue as Double
     override val image: String
-        get() = _image!!
-    override val isChoose: Boolean?
-        get() = true
+        get() = ""
+    override val category: String
+        get() {
+            val catRef = attribute!!["idcrm_category"]!!.associatedValue as EntityReference
+            return catRef.toString()
+        }
+    override val venue: String
+        get() {
+            val venueRef = attribute!!["idcrm_venue"]!!.associatedValue as EntityReference
+            return venueRef.toString()
+        }
+    override val min: Double?
+        get() = attribute!!["idcrm_min"]?.let {
+            it.associatedValue as Double
+        }
+
+    override val max: Double?
+        get() = attribute!!["idcrm_max"]?.let {
+            it.associatedValue as Double
+        }
+
+    override fun toString(): String {
+        return id + " " + name + " " + price + " " + image + " " + category + " " + venue + " " + min + " " + max
+    }
+
 }

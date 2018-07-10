@@ -22,8 +22,14 @@ import soteca.com.genisysandroid.framwork.networking.RequestTask
 class DynamicsConnector(private val ctx: Context) {
 
     companion object {
+        
+        private var shared: DynamicsConnector? = null
+
         fun default(context: Context): DynamicsConnector {
-            return DynamicsConnector(context)
+            if (shared == null) {
+                shared = DynamicsConnector(context)
+            }
+            return shared!!
         }
     }
 

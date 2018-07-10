@@ -122,7 +122,6 @@ class RequestTask<T : Decoder>(val decoder: Decoder?, val done: ((result: T?, er
                         return (tokenDecoder as T to null)
                     }
                     is RetrieveMultipleDecoder -> {
-
                         val retrieveMultipleDecoder = serializer.read(RetrieveMultipleDecoder::class.java, inputStream)
                         closeConnection()
                         if (retrieveMultipleDecoder.results == null) {

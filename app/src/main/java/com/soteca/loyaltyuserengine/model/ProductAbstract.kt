@@ -2,7 +2,11 @@ package com.soteca.loyaltyuserengine.model
 
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 
-abstract class ProductAbstract(data: EntityCollection.Attribute) : BaseItem(data) {
+abstract class ProductAbstract : BaseItem {
+
+    constructor()
+
+    constructor(data: EntityCollection.Attribute) : super(data)
 
     abstract val id: String
         get
@@ -12,6 +16,12 @@ abstract class ProductAbstract(data: EntityCollection.Attribute) : BaseItem(data
         get
     abstract val image: String
         get
-    abstract val isChoose: Boolean?
+    abstract val category: String
+        get
+    abstract val venue: String
+        get
+    abstract val min: Double?
+        get
+    abstract val max: Double?
         get
 }
