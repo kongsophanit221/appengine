@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.soteca.loyaltyuserengine.model.*
+import com.soteca.loyaltyuserengine.util.Scale
+import com.soteca.loyaltyuserengine.util.screenScale
 import soteca.com.genisysandroid.framwork.connector.DynamicsConfiguration
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 import soteca.com.genisysandroid.framwork.model.FetchExpression
