@@ -1,17 +1,23 @@
 package com.soteca.loyaltyuserengine.model
 
 import android.content.Context
+import android.util.Log
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.FetchExpression
 import soteca.com.genisysandroid.framwork.networking.Errors
+import kotlin.reflect.KClass
 
 open class BaseItem() {
 
-    constructor(data: EntityCollection.Attribute) : this()
+    constructor(attribute: EntityCollection.Attribute) : this()
 
     open val attributePush: EntityCollection.Attribute? = null
         get
+
+    open fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
+        return BaseItem(attribute)
+    }
 }
 
 interface AppDatasource {
@@ -24,24 +30,6 @@ interface AppDatasource {
 // temporary, datasource from online
 class Datasource(val context: Context) : AppDatasource {
 
-//    override fun <T : BaseItem> get(type: T, fetchExpression: FetchExpression, handler: (T?, Errors?) -> Void) {
-//
-//        DynamicsConnector.default(context).retrieveMultiple(fetchExpression) { entityCollection, errors ->
-//
-//            if (errors != null) {
-//                handler(null, errors)
-//                return@retrieveMultiple
-//            }
-//            var data: BaseItem? = null
-//
-//            when (type) {
-//
-//            }
-//
-//            handler(data as T, null)
-//        }
-//    }
-
     override fun <T : BaseItem> getMultiple(type: T, fetchExpression: FetchExpression, handler: (ArrayList<T>?, Errors?) -> Unit) {
 
         DynamicsConnector.default(context).retrieveMultiple(fetchExpression) { entityCollection, errors ->
@@ -53,30 +41,52 @@ class Datasource(val context: Context) : AppDatasource {
 
             var data: ArrayList<T> = ArrayList()
 
-            when (type) {
-
-                is Product -> {
-
-                    entityCollection!!.entityList!!.forEach {
-
-                        val isBundle = it.attribute!!["idcrm_isbundle"]!!.associatedValue as Boolean
-                        val isBelongToBundle = it.attribute!!["idcrm_belongstobundle"]!!.associatedValue as Boolean
-                        val isAuxiliary = it.attribute!!["idcrm_isauxiliary"]!!.associatedValue as Boolean
-
-                        if (isBundle) {
-                            val product = BundleProduct(it.attribute!!)
-                            data.add(product as T)
-                        } else if (!isBelongToBundle && !isAuxiliary) {
-                            val product = SingleProduct(it.attribute!!)
-                            data.add(product as T)
-                        }
-                    }
-                }
+            entityCollection!!.entityList!!.forEach {
+                data.add(type.initContructor(it.attribute!!) as T)
             }
 
             handler(data, null)
         }
     }
 
+    fun getProducts(handler: (ArrayList<Product>?, Errors?) -> Unit) {
+
+        getMultiple(Component(), FetchExpression(FetchExpression.Entity("idcrm_poscomponent")), { components: ArrayList<Component>?, errors: Errors? ->
+
+            if (errors != null) {
+                handler(null, errors)
+                return@getMultiple
+            }
+
+            getMultiple(Product(), FetchExpression(FetchExpression.Entity("idcrm_posproduct")), { products, errors ->
+
+                if (errors != null) {
+                    handler(null, errors)
+                    return@getMultiple
+                }
+
+                components!!.forEach {
+                    val applyToId = it.applyToId
+                    val auxiliaryId = it.productId
+                    val auxiliary = products!!.filter { it.id == auxiliaryId }.single() as AuxiliaryProduct
+                    val applyTo = products!!.filter { it.id == applyToId }.single()
+                    applyTo.addOnComponent(AuxiliaryProduct(auxiliary, it.name))
+                }
+
+                var bundleProducts = products!!.filter { it is BundleProduct }
+                bundleProducts.forEach {
+                    val bundelProduct = (it as BundleProduct)
+                    bundelProduct.products.addAll(products!!.filter { it.bundleId == bundelProduct.id })
+                }
+
+                var finalProducts: ArrayList<Product> = arrayListOf()
+                finalProducts.addAll(products!!.filter { it is SingleProduct || it is BundleProduct })
+
+                handler(finalProducts, null)
+            })
+        })
+
+
+    }
 
 }

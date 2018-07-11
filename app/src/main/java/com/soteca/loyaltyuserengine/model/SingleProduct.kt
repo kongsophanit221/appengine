@@ -5,9 +5,6 @@ import soteca.com.genisysandroid.framwork.model.EntityReference
 
 class SingleProduct : Product {
 
-    private var attribute: EntityCollection.Attribute? = null
-    private var auxiliaryProducts: ArrayList<AuxiliaryProduct>? = null //
-
     val auxiliaryProductsAdd: ArrayList<AuxiliaryProduct>
         get() {
             var tem: ArrayList<AuxiliaryProduct> = ArrayList()
@@ -19,7 +16,11 @@ class SingleProduct : Product {
             return tem
         }
 
-    var isSelect = false //for custom select product from category
+    var isHasAuxiliary: Boolean = false
+        get() = auxiliaryProducts.size > 0
+
+    private var attribute: EntityCollection.Attribute? = null
+    private var auxiliaryProducts: ArrayList<AuxiliaryProduct> = ArrayList() //
 
     constructor() : super() {}
 
@@ -59,8 +60,11 @@ class SingleProduct : Product {
             (it.associatedValue as EntityReference).id
         }
 
-    override fun toString(): String {
-        return "product: " + id + " " + name + " " + price + " " + image + " " + category + " " + venue + " " + min + " " + max + " " + bundleId
+    override fun addOnComponent(product: AuxiliaryProduct) {
+        auxiliaryProducts.add(product)
     }
 
+    override fun toString(): String {
+        return "product: " + id + " " + name + " " + price + " " + image + " " + category + " " + venue + " " + min + " " + max + " " + bundleId + " " + auxiliaryProducts.size
+    }
 }

@@ -3,14 +3,21 @@ package com.soteca.loyaltyuserengine.model
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
 
-class BundleProduct(val attribute: EntityCollection.Attribute) : Product(attribute) {
+class BundleProduct : Product {
 
-    var products: ArrayList<Product>? = null
-    private var customProducts: HashMap<String, ArrayList<SingleProduct>>? = null
-
-    val customProductsSelect: HashMap<String, SingleProduct>
+    private var attribute: EntityCollection.Attribute? = null
+    private var auxiliaryProducts: ArrayList<AuxiliaryProduct> = ArrayList()
+    private var customProducts: Map<String, List<AuxiliaryProduct>> = hashMapOf()
         get() {
-            var tem = HashMap<String, SingleProduct>()
+            return auxiliaryProducts.groupBy {
+                it!!.description!!
+            }
+        }
+
+    var products: ArrayList<SingleProduct> = ArrayList()
+    val customProductsSelect: HashMap<String, AuxiliaryProduct>
+        get() {
+            var tem = HashMap<String, AuxiliaryProduct>()
             customProducts?.let {
                 it.forEach {
                     tem[it.key] = it.value.filter { it.isSelect == true }.single()
@@ -18,6 +25,12 @@ class BundleProduct(val attribute: EntityCollection.Attribute) : Product(attribu
             }
             return tem
         }
+
+    constructor() : super() {}
+
+    constructor(attribute: EntityCollection.Attribute) : super(attribute) {
+        this.attribute = attribute
+    }
 
 
     override var id: String = ""
@@ -52,7 +65,11 @@ class BundleProduct(val attribute: EntityCollection.Attribute) : Product(attribu
             (it.associatedValue as EntityReference).id
         }
 
+    override fun addOnComponent(product: AuxiliaryProduct) {
+        auxiliaryProducts.add(product)
+    }
+
     override fun toString(): String {
-        return "bundle: " + id + " " + name + " " + price + " " + image + " " + category + " " + venue + " " + min + " " + max + " " + bundleId
+        return "bundle: " + id + " " + name + " " + price + " " + image + " " + category + " " + venue + " " + min + " " + max + " " + bundleId + " " + auxiliaryProducts.size
     }
 }
