@@ -26,7 +26,7 @@ class AuxiliaryProduct : Product {
     private var _id: String = ""
     private var _name: String = ""
     private var _image: String = ""
-    private var _category: String = ""
+    private var _category: EntityReference? = null
     private var _venus: String = ""
     private var _min: Double? = null
     private var _max: Double? = null
@@ -38,7 +38,7 @@ class AuxiliaryProduct : Product {
         this._id = attribute!!["idcrm_posproductid"]!!.associatedValue.toString()
         this._name = attribute!!["idcrm_name"]!!.associatedValue.toString()
         this._venus = (attribute!!["idcrm_venue"]!!.associatedValue as EntityReference).name!!
-        this._category = (attribute!!["idcrm_category"]!!.associatedValue as EntityReference).name!!
+        this._category = attribute!!["idcrm_category"]!!.associatedValue as EntityReference
 
         this._min = attribute!!["idcrm_min"]?.let {
             it.associatedValue as Double
@@ -73,7 +73,7 @@ class AuxiliaryProduct : Product {
 
     override var image: String = ""
 
-    override var category: String = ""
+    override var category: EntityReference? = null
         get() = _category
 
     override var venue: String = ""

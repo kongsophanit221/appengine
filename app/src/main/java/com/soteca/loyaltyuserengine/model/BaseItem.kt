@@ -59,6 +59,28 @@ class Datasource(val context: Context) : AppDatasource {
         }
     }
 
+    fun getCategaries(handler: (ArrayList<Category>?, Errors?) -> Unit) {
+
+        getMultiple(Category(), FetchExpression(FetchExpression.Entity("idcrm_poscategory"))) { categories: ArrayList<Category>?, errors: Errors? ->
+
+            if (errors != null) {
+                handler(null, errors)
+                return@getMultiple
+            }
+
+            getProducts({ products, error ->
+
+                categories!!.forEach {
+                    it.products.addAll(products!!.filter { pit -> pit.category!!.id == it.id })
+                }
+
+                handler(categories, null)
+            })
+
+        }
+
+    }
+
     fun getProducts(handler: (ArrayList<Product>?, Errors?) -> Unit) {
 
         getMultiple(Component(), FetchExpression(FetchExpression.Entity("idcrm_poscomponent")), { components: ArrayList<Component>?, errors: Errors? ->
@@ -77,13 +99,10 @@ class Datasource(val context: Context) : AppDatasource {
 
                 // Getting Auxiliary product as AddOn put in Single and Auxiliary, as Custom product put in Bundle
                 components!!.forEach {
-                    val applyToId = it.applyToId
-                    val auxiliaryId = it.productId
-                    val auxiliary = products!!.filter { it.id == auxiliaryId }.single() as AuxiliaryProduct
-                    val applyTo = products!!.filter { it.id == applyToId }.single()
+                    val auxiliary = products!!.filter { pit -> pit.id == it.productId }.single() as AuxiliaryProduct
+                    val applyTo = products!!.filter { ait -> ait.id == it.applyToId }.single()
                     applyTo.addOnComponent(AuxiliaryProduct(auxiliary, it.name))
                 }
-
 
                 // Getting Auxiliary product as Single product put in to list in Bundle product
                 var bundleProducts = products!!.filter { it is BundleProduct }

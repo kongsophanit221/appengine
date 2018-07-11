@@ -44,8 +44,8 @@ class BundleProduct : Product {
 
     override var image: String = ""
 
-    override var category: String = ""
-        get() = (attribute!!["idcrm_category"]!!.associatedValue as EntityReference).name!!
+    override var category: EntityReference? = null
+        get() = attribute!!["idcrm_category"]!!.associatedValue as EntityReference
 
     override var venue: String = ""
         get() = (attribute!!["idcrm_venue"]!!.associatedValue as EntityReference).name!!

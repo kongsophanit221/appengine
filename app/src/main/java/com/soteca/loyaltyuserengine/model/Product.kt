@@ -1,6 +1,7 @@
 package com.soteca.loyaltyuserengine.model
 
 import soteca.com.genisysandroid.framwork.model.EntityCollection
+import soteca.com.genisysandroid.framwork.model.EntityReference
 
 open class Product : BaseItem {
 
@@ -12,11 +13,14 @@ open class Product : BaseItem {
     open var name: String = ""
     open var price: Double = 0.0
     open var image: String = ""
-    open var category: String = ""
+    open var category: EntityReference? = null
     open var venue: String = ""
     open var min: Double? = null
     open var max: Double? = null
     open var bundleId: String? = null
+
+    val entityReference: EntityReference?
+        get() = EntityReference(id, "idcrm_posproduct")
 
     open fun addOnComponent(product: AuxiliaryProduct) {}
 

@@ -24,10 +24,16 @@ class MainActivity : AppCompatActivity() {
                 "avm-!dT]PD?7{AZg")
         connector.authenticate(con) { u, e ->
 
-            Datasource.newInstance(this@MainActivity).getProducts({ products, error ->
-                products!!.forEach {
-                    Log.d("tMain", it.toString())
-                }
+            //            Datasource.newInstance(this@MainActivity).getProducts({ products, error ->
+//                products!!.forEach {
+//                    Log.d("tMain", it.toString())
+//                }
+//            })
+
+            Datasource.newInstance(this@MainActivity).getCategaries({ categories, error ->
+                    categories!!.forEach {
+                        Log.d("tMain", it.toString())
+                    }
             })
 
         }
