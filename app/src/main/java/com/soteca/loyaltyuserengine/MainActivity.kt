@@ -32,6 +32,20 @@ class MainActivity : AppCompatActivity() {
             /*Datasource(this).getMultiple(ProductGroup(), FetchExpression(FetchExpression.Entity("idcrm_poscategory"))) { productGroup: ArrayList<ProductGroup>?, errors: Errors? ->
 
             }*/
+
+            val TAG = "tMainActivity"
+            Datasource(this).getMultiple(SingleProduct(), FetchExpression(FetchExpression.Entity("idcrm_posproduct"))) { singleProducts: ArrayList<SingleProduct>?, errors: Errors? ->
+                singleProducts!!.forEach {
+                    DynamicsConnector.default(this).retrieveMultiple(FetchExpression(FetchExpression.Entity("annotation"))) { entityCollection, errors ->
+                        val entityList = entityCollection!!.entityList!!.filter { it -> it.id == it.id }
+                        entityList.forEach {
+                            it.attribute!!.keyValuePairList!!.forEach {
+                                Log.d(TAG, "${it.key} : ${it.value!!.associatedValue}")
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
