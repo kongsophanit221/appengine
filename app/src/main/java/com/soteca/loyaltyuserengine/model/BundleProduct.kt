@@ -14,7 +14,7 @@ class BundleProduct : Product {
             }
         }
 
-    var products: ArrayList<SingleProduct> = ArrayList()
+    var products: ArrayList<AuxiliaryProduct> = ArrayList()
     val customProductsSelect: HashMap<String, AuxiliaryProduct>
         get() {
             var tem = HashMap<String, AuxiliaryProduct>()

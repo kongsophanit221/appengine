@@ -24,20 +24,12 @@ class MainActivity : AppCompatActivity() {
                 "avm-!dT]PD?7{AZg")
         connector.authenticate(con) { u, e ->
 
-
-            //            Datasource(this@MainActivity).getMultiple(SingleProduct(), FetchExpression(FetchExpression.Entity("idcrm_posproduct"))) { singleProducts: ArrayList<Product>?, errors: Errors? ->
-//
-//            }
-
-
-            Datasource(this@MainActivity).getProducts({ products, error ->
+            Datasource.newInstance(this@MainActivity).getProducts({ products, error ->
                 products!!.forEach {
                     Log.d("tMain", it.toString())
                 }
             })
 
-
-//        })
         }
     }
 }

@@ -30,6 +30,16 @@ interface AppDatasource {
 // temporary, datasource from online
 class Datasource(val context: Context) : AppDatasource {
 
+    companion object {
+        private var _shared: Datasource? = null
+        fun newInstance(context: Context): Datasource {
+            if (_shared == null) {
+                _shared = Datasource(context)
+            }
+            return _shared!!
+        }
+    }
+
     override fun <T : BaseItem> getMultiple(type: T, fetchExpression: FetchExpression, handler: (ArrayList<T>?, Errors?) -> Unit) {
 
         DynamicsConnector.default(context).retrieveMultiple(fetchExpression) { entityCollection, errors ->
@@ -65,6 +75,7 @@ class Datasource(val context: Context) : AppDatasource {
                     return@getMultiple
                 }
 
+                // Getting Auxiliary product as AddOn put in Single and Auxiliary, as Custom product put in Bundle
                 components!!.forEach {
                     val applyToId = it.applyToId
                     val auxiliaryId = it.productId
@@ -73,10 +84,12 @@ class Datasource(val context: Context) : AppDatasource {
                     applyTo.addOnComponent(AuxiliaryProduct(auxiliary, it.name))
                 }
 
+
+                // Getting Auxiliary product as Single product put in to list in Bundle product
                 var bundleProducts = products!!.filter { it is BundleProduct }
                 bundleProducts.forEach {
                     val bundelProduct = (it as BundleProduct)
-                    bundelProduct.products.addAll(products!!.filter { it.bundleId == bundelProduct.id })
+                    bundelProduct.products.addAll(products!!.filter { it.bundleId == bundelProduct.id }.map { it as AuxiliaryProduct })
                 }
 
                 var finalProducts: ArrayList<Product> = arrayListOf()
@@ -85,8 +98,6 @@ class Datasource(val context: Context) : AppDatasource {
                 handler(finalProducts, null)
             })
         })
-
-
     }
 
 }
