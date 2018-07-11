@@ -48,4 +48,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    val TAG = "tMainActivity"
+    private fun getScreenDensity() {
+        val density = resources.displayMetrics.density
+        when (density) {
+            in 1.5..2.0 -> Log.d(TAG, "1.5..2.0")
+            in 2.0..3.0 -> Log.d(TAG, "2.0..3.0")
+            in 3.0..4.0 -> Log.d(TAG, "3.0..4.0")
+        }
+    }
 }
