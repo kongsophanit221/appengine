@@ -21,78 +21,29 @@ class AuxiliaryProduct : Product {
     var isHasAuxiliary: Boolean = false
         get() = auxiliaryProducts.size > 0
 
-    //    private var attribute: EntityCollection.Attribute? = null
-    private var auxiliaryProducts: ArrayList<AuxiliaryProduct> = ArrayList() //
-    private var _id: String = ""
-    private var _name: String = ""
-    private var _image: String = ""
-    private var _category: EntityReference? = null
-    private var _venus: String = ""
-    private var _min: Double? = null
-    private var _max: Double? = null
-    private var _bundleId: String? = null
+    private var auxiliaryProducts: ArrayList<AuxiliaryProduct> = ArrayList()
 
-    constructor() : super() {}
+    constructor() : super()
 
-    constructor(attribute: EntityCollection.Attribute) : super(attribute) {
-        this._id = attribute!!["idcrm_posproductid"]!!.associatedValue.toString()
-        this._name = attribute!!["idcrm_name"]!!.associatedValue.toString()
-        this._venus = (attribute!!["idcrm_venue"]!!.associatedValue as EntityReference).name!!
-        this._category = attribute!!["idcrm_category"]!!.associatedValue as EntityReference
-
-        this._min = attribute!!["idcrm_min"]?.let {
-            it.associatedValue as Double
-        }
-        this._max = attribute!!["idcrm_max"]?.let {
-            it.associatedValue as Double
-        }
-        this._bundleId = attribute!!["idcrm_bundle"]?.let {
-            (it!!.associatedValue as EntityReference).id
-        }
-
-    }
+    constructor(attribute: EntityCollection.Attribute) : super(attribute)
 
     constructor(newAuxiliaryProduct: AuxiliaryProduct, description: String?) : this() {
-        this._id = newAuxiliaryProduct.id
-        this._name = newAuxiliaryProduct.name
-        this._venus = newAuxiliaryProduct.venue
-        this._bundleId = newAuxiliaryProduct.bundleId
-        this._category = newAuxiliaryProduct.category
-        this._min = newAuxiliaryProduct.min
-        this._max = newAuxiliaryProduct.max
+        this.id = newAuxiliaryProduct.id
+        this.name = newAuxiliaryProduct.name
+        this.venue = newAuxiliaryProduct.venue
+        this.bundleId = newAuxiliaryProduct.bundleId
+        this.category = newAuxiliaryProduct.category
+        this.price = newAuxiliaryProduct.price
+        this.min = newAuxiliaryProduct.min
+        this.max = newAuxiliaryProduct.max
         this.description = description
     }
-
-    override var id: String = ""
-        get() = _id
-
-    override var name: String = ""
-        get() = _name
-
-    override var price: Double = 0.0
-
-    override var image: String = ""
-
-    override var category: EntityReference? = null
-        get() = _category
-
-    override var venue: String = ""
-        get() = _venus
-
-    override var min: Double? = null
-        get() = _min
-
-    override var max: Double? = null
-        get() = _max
-
-    override var bundleId: String? = null
-        get() = _bundleId
 
     override fun addOnComponent(product: AuxiliaryProduct) {
         auxiliaryProducts.add(product)
     }
 
     override fun toString(): String {
-        return "auxiliary id: " + id + " name: " + _name + " bundleId: " + _bundleId
+        return "auxiliary id: " + id + " name: " + name + " bundleId: " + bundleId
     }
 }

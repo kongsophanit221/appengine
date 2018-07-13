@@ -26,8 +26,8 @@ class MainActivity : AppCompatActivity() {
                 "avm-!dT]PD?7{AZg")
         connector.authenticate(con) { u, e ->
 
-            //            Datasource.newInstance(this@MainActivity).getProducts({ products, error ->
-//                products!!.forEach {
+//            Datasource.newInstance(this@MainActivity).getMultiple(Order(), FetchExpression(FetchExpression.Entity("idcrm_posorder")), { orders, error ->
+//                orders!!.forEach {
 //                    Log.d("tMain", it.toString())
 //                }
 //            })

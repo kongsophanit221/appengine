@@ -59,10 +59,10 @@ class FetchExpression(
 
         fun fetct(count: Int? = null, entityType: String, page: Int? = null, pagingCookie: String? = null, attributes: ArrayList<String>? = null,
                   filter: Filter? = null, orderAttribute: String? = null, isDescending: Boolean = false): FetchExpression {
-            val _attributes = attributes.let { ArrayList(it!!.map { Attributee(it) }) }
-            val _order = orderAttribute.let { arrayListOf(Order(it, null, isDescending)) }
+            val _attributes = attributes?.let { ArrayList(it!!.map { Attributee(it) }) }
+            val _order = orderAttribute?.let { arrayListOf(Order(it, null, isDescending)) }
             val _entity = Entity(entityType, _attributes, null, filter, _order)
-            return FetchExpression(_entity, null, null, null, null, null, true, null)
+            return FetchExpression(_entity, null, null, null, null, null, null, null)
         }
     }
 
@@ -227,7 +227,6 @@ class FetchExpression(
             @field:Attribute(name = "attribute", required = false)
             var attribute: String? = null,
 
-            @field:Attribute(name = "operator", required = false)
             var `operator`: Operator? = null,
 
             @field:Attribute(name = "value", required = false)
@@ -247,7 +246,11 @@ class FetchExpression(
 
             @field:Attribute(name = "aggregate", required = false)
             var aggregate: AggregateType? = null
-    )
+    ) {
+
+        @field:Attribute(name = "operator", required = false)
+        private var operatorValue: String = `operator`!!.value
+    }
 
     @Root(strict = false)
     enum class Operator(val value: String) {

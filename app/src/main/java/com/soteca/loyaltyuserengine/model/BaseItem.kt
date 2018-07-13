@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 import soteca.com.genisysandroid.framwork.model.EntityCollection
+import soteca.com.genisysandroid.framwork.model.EntityReference
 import soteca.com.genisysandroid.framwork.model.FetchExpression
 import soteca.com.genisysandroid.framwork.networking.Errors
 import kotlin.reflect.KClass
@@ -22,7 +23,7 @@ open class BaseItem() {
 
 interface AppDatasource {
 
-//    fun <T : BaseItem> get(type: T, fetchExpression: FetchExpression, handler: (T?, Errors?) -> Void)
+    fun <T : BaseItem> get(type: T, reference: EntityReference, handler: (T?, Errors?) -> Unit)
 
     fun <T : BaseItem> getMultiple(type: T, fetchExpression: FetchExpression, handler: (ArrayList<T>?, Errors?) -> Unit)
 }
@@ -31,12 +32,29 @@ interface AppDatasource {
 class Datasource(val context: Context) : AppDatasource {
 
     companion object {
+        var productsGlobal: ArrayList<Product> = ArrayList()
         private var _shared: Datasource? = null
         fun newInstance(context: Context): Datasource {
             if (_shared == null) {
                 _shared = Datasource(context)
             }
             return _shared!!
+        }
+    }
+
+    val entityPrimaryIdMap: HashMap<String, String> = hashMapOf("annotation" to "annotationid", "idcrm_posproduct" to "idcrm_posproductid", "idcrm_poscategory" to "idcrm_poscategoryid", "idcrm_poscomponent" to "idcrm_poscomponentid")
+
+    override fun <T : BaseItem> get(type: T, reference: EntityReference, handler: (T?, Errors?) -> Unit) {
+        val primaryId = entityPrimaryIdMap[reference.logicalName]
+        val expression = FetchExpression.fetct(1, reference.logicalName!!, null, null, null, FetchExpression.Filter.singleCondition(FetchExpression.Condition(primaryId, FetchExpression.Operator.equal, reference.id)))
+
+        DynamicsConnector.default(context).retrieveMultiple(expression) { entityCollection, errors ->
+            if (errors != null) {
+                handler(null, errors)
+                return@retrieveMultiple
+            }
+            val entity = entityCollection!!.entityList!!.single()
+            handler(type.initContructor(entity.attribute!!) as T, null)
         }
     }
 
@@ -61,7 +79,8 @@ class Datasource(val context: Context) : AppDatasource {
 
     fun getCategaries(handler: (ArrayList<Category>?, Errors?) -> Unit) {
 
-        getMultiple(Category(), FetchExpression(FetchExpression.Entity("idcrm_poscategory"))) { categories: ArrayList<Category>?, errors: Errors? ->
+        val expression = FetchExpression.fetct(null, "idcrm_poscategory", null, null, null, FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, "0")))
+        getMultiple(Category(), expression) { categories: ArrayList<Category>?, errors: Errors? ->
 
             if (errors != null) {
                 handler(null, errors)
@@ -83,19 +102,23 @@ class Datasource(val context: Context) : AppDatasource {
 
     fun getProducts(handler: (ArrayList<Product>?, Errors?) -> Unit) {
 
-        getMultiple(Component(), FetchExpression(FetchExpression.Entity("idcrm_poscomponent")), { components: ArrayList<Component>?, errors: Errors? ->
+        val expression = FetchExpression.fetct(null, "idcrm_poscomponent", null, null, null, FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, "0")))
+        getMultiple(Component(), expression, { components: ArrayList<Component>?, errors: Errors? ->
 
             if (errors != null) {
                 handler(null, errors)
                 return@getMultiple
             }
 
-            getMultiple(Product(), FetchExpression(FetchExpression.Entity("idcrm_posproduct")), { products, errors ->
+            val expression = FetchExpression.fetct(null, "idcrm_posproduct", null, null, null, FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, "0")))
+            getMultiple(Product(), expression, { products, errors ->
 
                 if (errors != null) {
                     handler(null, errors)
                     return@getMultiple
                 }
+
+                productsGlobal.addAll(products!!)
 
                 // Getting Auxiliary product as AddOn put in Single and Auxiliary, as Custom product put in Bundle
                 components!!.forEach {
@@ -117,6 +140,14 @@ class Datasource(val context: Context) : AppDatasource {
                 handler(finalProducts, null)
             })
         })
+    }
+
+    fun getOrders(handler: (Order?, Errors?) -> Unit) {
+
+    }
+
+    fun getOrderLine(handler: (ArrayList<CartItem>?, Errors?) -> Unit) {
+
     }
 
 }
