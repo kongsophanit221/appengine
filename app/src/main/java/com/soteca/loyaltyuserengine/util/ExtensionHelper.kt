@@ -1,9 +1,8 @@
 package com.soteca.loyaltyuserengine.util
 
-import android.content.Context
 import android.content.res.Resources
-import android.util.Log
-import com.soteca.loyaltyuserengine.model.Datasource
+import android.media.Image
+import android.widget.ImageView
 
 class ExtensionHelper {
 
@@ -17,22 +16,20 @@ enum class ImageScaleType {
         val density = Resources.getSystem().displayMetrics.density
 
         return when (this) {
-            ImageScaleType.SMALL -> return "small_${density.toInt()}"
-            ImageScaleType.MEDIUM -> return "medium_${density.toInt()}"
+            ImageScaleType.SMALL -> return "small_${density.screenScale()}"
+            ImageScaleType.MEDIUM -> return "medium_${density.screenScale()}"
         }
     }
 }
 
-/*
-fun Resources.screenScale(): Scale {
+fun Float.screenScale(): Int {
 
-    val density = this.displayMetrics.density
+    val density = Resources.getSystem().displayMetrics.density
 
-    when (density) {
-        in 1.5..2.0 -> return Scale.SMALL
-        in 2.0..3.0 -> return Scale.MEDIUM
-        in 3.0..4.0 -> return Scale.BIG
+    return when (density) {
+        in 1.5..2.0 -> return 1
+        in 2.0..3.0 -> return 2
+        in 3.0..4.0 -> return 3
+        else -> 0
     }
-
-    return Scale.SMALL
-}*/
+}
