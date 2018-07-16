@@ -23,13 +23,9 @@ enum class ImageScaleType {
 }
 
 fun Float.screenScale(): Int {
-
-    val density = Resources.getSystem().displayMetrics.density
-
-    return when (density) {
-        in 1.5..2.0 -> return 1
-        in 2.0..3.0 -> return 2
-        in 3.0..4.0 -> return 3
-        else -> 0
+    return when (this) {
+        in 0.0..1.5 -> return 1
+        in 1.5..2.5 -> return 2
+        else -> 3
     }
 }
