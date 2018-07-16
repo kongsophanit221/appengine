@@ -3,13 +3,11 @@ package com.soteca.loyaltyuserengine.model
 import android.content.Context
 import android.util.Log
 import com.soteca.loyaltyuserengine.util.ImageScaleType
-import org.simpleframework.xml.core.Persister
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
 import soteca.com.genisysandroid.framwork.model.FetchExpression
 import soteca.com.genisysandroid.framwork.networking.Errors
-import java.io.ByteArrayOutputStream
 
 open class BaseItem() {
 
