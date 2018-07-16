@@ -22,7 +22,13 @@ class MainActivity : AppCompatActivity() {
 
             Datasource.newInstance(this@MainActivity).getProducts { products, error ->
                 products!!.forEach {
+                    /*Datasource.newInstance(this).getAnnotation(it.entityReference, ImageScaleType.SMALL) { annotation, errors ->
 
+                    }*/
+
+                    /*Datasource.newInstance(this).getMultipleAnnotation(it.entityReference!!.logicalName, arrayListOf(it.id), ImageScaleType.SMALL) { annotations: ArrayList<Annotation>?, errors: Errors? ->
+
+                    }*/
                 }
             }
 
