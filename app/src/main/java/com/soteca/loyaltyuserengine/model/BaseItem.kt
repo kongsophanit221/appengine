@@ -46,7 +46,7 @@ class Datasource(val context: Context) : AppDatasource {
 
     override fun <T : BaseItem> get(type: T, reference: EntityReference, handler: (T?, Errors?) -> Unit) {
         val primaryId = entityPrimaryIdMap[reference.logicalName]
-        val expression = FetchExpression.fetct(1, reference.logicalName!!, null, null, null, FetchExpression.Filter.singleCondition(FetchExpression.Condition(primaryId, FetchExpression.Operator.equal, reference.id)))
+        val expression = FetchExpression.fetct(count = 1, entityType = reference.logicalName!!, filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition(primaryId, FetchExpression.Operator.equal, reference.id)))
 
         DynamicsConnector.default(context).retrieveMultiple(expression) { entityCollection, errors ->
             if (errors != null) {
@@ -79,7 +79,7 @@ class Datasource(val context: Context) : AppDatasource {
 
     fun getCategaries(handler: (ArrayList<Category>?, Errors?) -> Unit) {
 
-        val expression = FetchExpression.fetct(null, "idcrm_poscategory", null, null, null, FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, "0")))
+        val expression = FetchExpression.fetct(entityType = "idcrm_poscategory", filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
         getMultiple(Category(), expression) { categories: ArrayList<Category>?, errors: Errors? ->
 
             if (errors != null) {
@@ -102,7 +102,7 @@ class Datasource(val context: Context) : AppDatasource {
 
     fun getProducts(handler: (ArrayList<Product>?, Errors?) -> Unit) {
 
-        val expression = FetchExpression.fetct(null, "idcrm_poscomponent", null, null, null, FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, "0")))
+        val expression = FetchExpression.fetct(entityType = "idcrm_poscomponent", filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
         getMultiple(Component(), expression, { components: ArrayList<Component>?, errors: Errors? ->
 
             if (errors != null) {
@@ -110,7 +110,7 @@ class Datasource(val context: Context) : AppDatasource {
                 return@getMultiple
             }
 
-            val expression = FetchExpression.fetct(null, "idcrm_posproduct", null, null, null, FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, "0")))
+            val expression = FetchExpression.fetct(entityType = "idcrm_posproduct", filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
             getMultiple(Product(), expression, { products, errors ->
 
                 if (errors != null) {
