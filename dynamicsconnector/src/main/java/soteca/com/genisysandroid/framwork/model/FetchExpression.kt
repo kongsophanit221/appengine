@@ -5,6 +5,7 @@ import org.simpleframework.xml.convert.Convert
 import org.simpleframework.xml.convert.Converter
 import org.simpleframework.xml.stream.InputNode
 import org.simpleframework.xml.stream.OutputNode
+import soteca.com.genisysandroid.framwork.model.encoder.body.Parameters
 
 @Root(name = "fetch")
 @Order(attributes = ["top", "count", "page", "mapping", "version"])
@@ -35,34 +36,40 @@ class FetchExpression(
 ) {
 
     @field:Attribute(name = "version", required = false)
-    var version: Float? = 1.0f
+    private var version: Float? = 1.0f
 
     @field:Attribute(name = "mapping", required = false)
-    var mapping: String? = "logical"
+    private var mapping: String? = "logical"
 
     companion object {
+
         fun fetchForms(entityCode: String): FetchExpression {
-            val filter = Filter.singleCondition(Condition("objecttypecode", Operator.eq, entityCode))
-            val fetchExpression = FetchExpression(Entity("systemform", null, null, filter, null), null, null, null, "", null, null, null)
+            val filter = Filter.singleCondition(Condition("objecttypecode", Operator.equal, entityCode))
+            val fetchExpression = FetchExpression(Entity("systemform", filter = filter))
+
             return fetchExpression
         }
 
         fun countEntity(entityType: String, filter: Filter? = null, attribute: String, alias: String, includeNull: Boolean = true): FetchExpression {
+
             var aggregate = AggregateType.count
+
             if (!includeNull) {
                 aggregate = AggregateType.columnCount
             }
             val attribute = Attributee(attribute, alias, aggregate)
             val entity = Entity(entityType, arrayListOf(attribute), null, filter)
-            return FetchExpression(entity, null, null, null, "", null, null, null)
+
+            return FetchExpression(entity, aggregate = true)
         }
 
         fun fetct(count: Int? = null, entityType: String, page: Int? = null, pagingCookie: String? = null, attributes: ArrayList<String>? = null,
                   filter: Filter? = null, orderAttribute: String? = null, isDescending: Boolean = false): FetchExpression {
-            val _attributes = attributes.let { ArrayList(it!!.map { Attributee(it) }) }
-            val _order = orderAttribute.let { arrayListOf(Order(it, null, isDescending)) }
+            val _attributes = attributes?.let { ArrayList(it!!.map { Attributee(it) }) }
+            val _order = orderAttribute?.let { arrayListOf(Order(it, null, isDescending)) }
             val _entity = Entity(entityType, _attributes, null, filter, _order)
-            return FetchExpression(_entity, null, null, null, null, null, true, null)
+
+            return FetchExpression(_entity, count = count, page = page, pagingCookie = pagingCookie)
         }
     }
 
@@ -102,15 +109,21 @@ class FetchExpression(
             @field:Attribute(name = "alias", required = false)
             var alias: String? = null,
 
-            @field:Attribute(name = "aggregate", required = false)
             var aggregate: AggregateType? = null,
 
-            @field:Attribute(name = "dategrouping", required = false)
             var dateGrouping: DateGroupingType? = null,
 
-            @field:Attribute(name = "groupby", required = false)
             var groupBy: FetchBoolType? = null
-    )
+    ) {
+        @field:Attribute(name = "aggregate", required = false)
+        private var aggregateValue: String? = aggregate?.let { it.value }
+
+        @field:Attribute(name = "dategrouping", required = false)
+        private var dateGroupingValue: String? = dateGrouping?.let { it.value }
+
+        @field:Attribute(name = "groupby", required = false)
+        private var groupByValue: String? = groupBy?.let { it.value }
+    }
 
     @Root(strict = false)
     enum class AggregateType(val value: String) {
@@ -155,7 +168,6 @@ class FetchExpression(
             @field:Attribute(name = "alias", required = false)
             var alias: String? = null,
 
-            @field:Attribute(name = "link-type", required = false)
             var linkType: LinkType? = null,
 
             @field:Attribute(name = "visible", required = false)
@@ -175,13 +187,16 @@ class FetchExpression(
 
             @field:ElementList(entry = "link-entity", inline = true, required = false)
             var linkEntities: ArrayList<LinkEntity>? = null
-    )
+    ) {
+        @field:Attribute(name = "link-type", required = false)
+        private var linkTypeValue: String? = linkType?.let { it.value }
+    }
 
     @Root(strict = false)
     enum class LinkType(val value: String) {
         INNER("inner"),
         OUTER("outer"),
-        JOIN("natural");
+        JOIN("join");
 
         override fun toString(): String {
             return value
@@ -191,7 +206,7 @@ class FetchExpression(
     @Root(strict = false)
     class Filter(
             @field:Attribute(name = "type", required = false)
-            var type: LogicalOperator? = null,
+            var type: LogicalOperator = LogicalOperator.and,
 
             @field:ElementList(entry = "condition", inline = true, required = false)
             var conditions: ArrayList<Condition>? = null,
@@ -202,7 +217,9 @@ class FetchExpression(
             @field:Attribute(name = "isquickfindfields", required = false)
             var isquickfindfields: Boolean? = null
     ) {
+
         companion object {
+
             fun singleCondition(condition: Condition): Filter {
                 return Filter(LogicalOperator.and, arrayListOf(condition))
             }
@@ -227,7 +244,6 @@ class FetchExpression(
             @field:Attribute(name = "attribute", required = false)
             var attribute: String? = null,
 
-            @field:Attribute(name = "operator", required = false)
             var `operator`: Operator? = null,
 
             @field:Attribute(name = "value", required = false)
@@ -245,13 +261,19 @@ class FetchExpression(
             @field:Attribute(name = "alias", required = false)
             var alias: String? = null,
 
-            @field:Attribute(name = "aggregate", required = false)
             var aggregate: AggregateType? = null
-    )
+    ) {
+
+        @field:Attribute(name = "operator", required = false)
+        private var operatorValue: String? = `operator`?.let { it.value }
+
+        @field:Attribute(name = "aggregate", required = false)
+        private var aggregateValue: String? = aggregate?.let { it.value }
+    }
 
     @Root(strict = false)
     enum class Operator(val value: String) {
-        eq("eq"), notEqual("neq"), notOn("ne"), greaterThan("gt"), greaterOrEqual("ge"),
+        equal("eq"), notEqual("neq"), notOn("ne"), greaterThan("gt"), greaterOrEqual("ge"),
         lessThan("lt"), lessOrEqual("le"), like("like"), notLike("not-like"), `in`("in"),
         notIn("not-in"), between("between"), notBetween("not-between"), `null`("null"),
         notNull("not-null"), yesterday("yesterday"), today("today"), tomorrow("tomorrow"),
@@ -292,8 +314,8 @@ class FetchExpression(
 
     @Root(strict = false)
     class Values(
-            @field:Attribute(name = "value", required = false)
-            var value: String? = "",
+            @field:Text
+            var value: String = "",
 
             @field:Attribute(name = "uiname", required = false)
             var uiName: String? = null,
@@ -305,12 +327,12 @@ class FetchExpression(
     @Root(strict = false)
     class Order(
             @field:Attribute(name = "attribute", required = false)
-            var attribute: String? = "",
+            var attribute: String = "",
 
             @field:Attribute(name = "alias", required = false)
             var alias: String? = null,
 
             @field:Attribute(name = "descending", required = false)
-            var descending: Boolean? = false
+            var descending: Boolean = false
     )
 }

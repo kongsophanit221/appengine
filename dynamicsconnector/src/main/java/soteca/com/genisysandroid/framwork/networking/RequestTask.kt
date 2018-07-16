@@ -4,7 +4,6 @@ import android.os.AsyncTask
 import android.util.Log
 import org.simpleframework.xml.convert.AnnotationStrategy
 import org.simpleframework.xml.core.Persister
-import soteca.com.genisysandroid.framwork.helper.decodeSpecialCharacter
 import soteca.com.genisysandroid.framwork.model.decoder.*
 import soteca.com.genisysandroid.framwork.model.encoder.body.Create
 import java.io.BufferedReader
@@ -48,8 +47,8 @@ class RequestTask<T : Decoder>(val decoder: Decoder?, val done: ((result: T?, er
             if (connection!!.responseCode != HttpURLConnection.HTTP_OK && connection!!.responseCode != HttpURLConnection.HTTP_CREATED) {
                 inputStream = connection!!.errorStream
                 isErrorResponse = true
-//                val errorText = streamToString(inputStream)!!
-//                Log.d(TAG, errorText)
+                val errorText = streamToString(inputStream)!!
+                Log.d(TAG, errorText)
             } else {
                 inputStream = connection!!.inputStream
                 isErrorResponse = false

@@ -7,7 +7,6 @@ import com.soteca.loyaltyuserengine.model.Datasource
 import com.soteca.loyaltyuserengine.util.ImageScaleType
 import soteca.com.genisysandroid.framwork.connector.DynamicsConfiguration
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
-import soteca.com.genisysandroid.framwork.model.FetchExpression
 
 class MainActivity : AppCompatActivity() {
 
@@ -31,7 +30,9 @@ class MainActivity : AppCompatActivity() {
                     }*/
 
                     /*Datasource.newInstance(this).getMultipleAnnotation(it.entityReference!!.logicalName, arrayListOf(it.id), ImageScaleType.SMALL) { annotations, errors ->
-                        Log.d(TAG, "${annotations!!.size}")
+                        annotations!!.forEach {
+                            Log.d(TAG, "$it")
+                        }
                     }*/
                 }
             }

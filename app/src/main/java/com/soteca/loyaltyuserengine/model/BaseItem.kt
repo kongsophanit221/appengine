@@ -146,7 +146,7 @@ class Datasource(val context: Context) : AppDatasource {
 
         val imageCondition = FetchExpression.Condition("subject", FetchExpression.Operator.like, "%${scaleType.subjectName()}%")
 
-        val linkEntityCondition = FetchExpression.Condition(secondEntity.primaryIdAttribute, FetchExpression.Operator.eq, entityReference.id)
+        val linkEntityCondition = FetchExpression.Condition(secondEntity.primaryIdAttribute, FetchExpression.Operator.equal, entityReference.id)
         val linkEntity = FetchExpression.LinkEntity(entityReference.logicalName, secondEntity.primaryIdAttribute, "objectid", null, null, null, null, null, null, FetchExpression.Filter(FetchExpression.LogicalOperator.and, arrayListOf(linkEntityCondition)))
 
         val expression = FetchExpression(FetchExpression.Entity("annotation", null, arrayListOf(linkEntity), FetchExpression.Filter(FetchExpression.LogicalOperator.and, arrayListOf(imageCondition))))
@@ -177,11 +177,6 @@ class Datasource(val context: Context) : AppDatasource {
         val linkEntity = FetchExpression.LinkEntity(logicalName, secondEntity.primaryIdAttribute, "objectid", null, null, null, null, null, null, FetchExpression.Filter(FetchExpression.LogicalOperator.and, arrayListOf(linkEntityCondition)))
 
         val expression = FetchExpression(FetchExpression.Entity("annotation", null, arrayListOf(linkEntity), FetchExpression.Filter(FetchExpression.LogicalOperator.and, arrayListOf(imageCondition))))
-
-        /*val serializer = Persister()
-        val output = ByteArrayOutputStream()
-        serializer.write(expression, output)
-        Log.d("Expression", output.toString())*/
 
         getMultiple(Annotation(), expression) { annotations, errors ->
             if (errors != null) {

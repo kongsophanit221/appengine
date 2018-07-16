@@ -18,16 +18,16 @@ import kotlin.collections.ArrayList
 
 @Root(name = "value", strict = false)
 data class EntityCollection(
-        @field:Element(name = "EntityName", required = false)
+        @field:Element(name = "EntityName")
         var entityName: String? = null,
 
-        @field:Element(name = "MoreRecords", required = false)
+        @field:Element(name = "MoreRecords")
         var moreRecords: Boolean? = false,
 
-        @field:Element(name = "PagingCookie", required = false)
+        @field:Element(name = "PagingCookie")
         var pagingCookie: String? = "",
 
-        @field:Element(name = "TotalRecordCount", required = false)
+        @field:Element(name = "TotalRecordCount")
         var totalRecordCount: Int? = 0,
 
         @field:Path(value = "Entities")

@@ -1,5 +1,6 @@
 package soteca.com.genisysandroid.framwork.model.encoder.body
 
+import android.util.Log
 import org.simpleframework.xml.Attribute
 import org.simpleframework.xml.Namespace
 import org.simpleframework.xml.Root
@@ -10,9 +11,12 @@ import org.simpleframework.xml.core.Persister
 import org.simpleframework.xml.stream.Format
 import org.simpleframework.xml.stream.InputNode
 import org.simpleframework.xml.stream.OutputNode
+import soteca.com.genisysandroid.framwork.helper.decodeSpecialCharacter
 import soteca.com.genisysandroid.framwork.model.EntityReference
 import soteca.com.genisysandroid.framwork.model.FetchExpression
 import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
+import java.io.OutputStream
 
 @Root(name = "request")
 @Convert(RequestEncoderConverter::class)
@@ -260,6 +264,9 @@ class ParamConverter : Converter<Parameters> {
 
                 if (value!!.keyValues != null) {
                     value!!.keyValues!!.forEach {
+                        val outputStream = ByteArrayOutputStream()
+//                        serializer.write(it, outputStream)
+//                        val content = outputStream.toByteArray().toString(Charsets.UTF_8).decodeSpecialCharacter().decodeSpecialCharacter()
                         serializer.write(it, node!!)
                     }
                 }
