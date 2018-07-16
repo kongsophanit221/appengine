@@ -2,11 +2,14 @@ package com.soteca.loyaltyuserengine.model
 
 import android.content.Context
 import android.util.Log
+import com.soteca.loyaltyuserengine.util.ImageScaleType
+import org.simpleframework.xml.core.Persister
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 import soteca.com.genisysandroid.framwork.model.EntityCollection
+import soteca.com.genisysandroid.framwork.model.EntityReference
 import soteca.com.genisysandroid.framwork.model.FetchExpression
 import soteca.com.genisysandroid.framwork.networking.Errors
-import kotlin.reflect.KClass
+import java.io.ByteArrayOutputStream
 
 open class BaseItem() {
 
@@ -22,7 +25,7 @@ open class BaseItem() {
 
 interface AppDatasource {
 
-//    fun <T : BaseItem> get(type: T, fetchExpression: FetchExpression, handler: (T?, Errors?) -> Void)
+    fun <T : BaseItem> get(type: T, fetchExpression: FetchExpression, handler: (T?, Errors?) -> Unit)
 
     fun <T : BaseItem> getMultiple(type: T, fetchExpression: FetchExpression, handler: (ArrayList<T>?, Errors?) -> Unit)
 }
@@ -56,6 +59,24 @@ class Datasource(val context: Context) : AppDatasource {
             }
 
             handler(data, null)
+        }
+    }
+
+    override fun <T : BaseItem> get(type: T, fetchExpression: FetchExpression, handler: (T?, Errors?) -> Unit) {
+        DynamicsConnector.default(context).retrieveMultiple(fetchExpression) { entityCollection, errors ->
+            if (errors != null) {
+                handler(null, errors)
+                return@retrieveMultiple
+            }
+
+            var data: BaseItem? = null
+
+            entityCollection!!.entityList!!.forEach {
+                //                data.add(type.initContructor(it.attribute!!) as T)
+                data = type.initContructor(it.attribute!!)
+            }
+
+            handler(data as T, null)
         }
     }
 
@@ -117,6 +138,84 @@ class Datasource(val context: Context) : AppDatasource {
                 handler(finalProducts, null)
             })
         })
+    }
+
+    fun getAnnotation(entityReference: EntityReference?, scaleType: ImageScaleType, handler: (Annotation?, Errors?) -> Unit) {
+
+        val secondEntity = DefaultEntity.from(entityReference!!.logicalName!!)
+
+        val imageCondition = FetchExpression.Condition("subject", FetchExpression.Operator.like, "%${scaleType.subjectName()}%")
+
+        val linkEntityCondition = FetchExpression.Condition(secondEntity.primaryIdAttribute, FetchExpression.Operator.eq, entityReference.id)
+        val linkEntity = FetchExpression.LinkEntity(entityReference.logicalName, secondEntity.primaryIdAttribute, "objectid", null, null, null, null, null, null, FetchExpression.Filter(FetchExpression.LogicalOperator.and, arrayListOf(linkEntityCondition)))
+
+        val expression = FetchExpression(FetchExpression.Entity("annotation", null, arrayListOf(linkEntity), FetchExpression.Filter(FetchExpression.LogicalOperator.and, arrayListOf(imageCondition))))
+
+        get(Annotation(), expression) { annotation, errors ->
+            if (errors != null) {
+                handler(null, errors)
+                return@get
+            }
+            val TAG = "tBaseItem"
+            Log.d(TAG, "$annotation -> $errors")
+            handler(annotation, errors)
+        }
+    }
+
+    fun getMultipleAnnotation(logicalName: String?, ids: ArrayList<String>?, scaleType: ImageScaleType, handler: (ArrayList<Annotation>?, Errors?) -> Unit) {
+
+        val secondEntity = DefaultEntity.from(logicalName!!)
+
+        val imageCondition = FetchExpression.Condition("subject", FetchExpression.Operator.like, "%${scaleType.subjectName()}%")
+
+        val values: List<FetchExpression.Values> = ids!!.map {
+            FetchExpression.Values(it)
+        }
+
+        val linkEntityCondition = FetchExpression.Condition(secondEntity.primaryIdAttribute, FetchExpression.Operator.`in`, null, values)
+
+        val linkEntity = FetchExpression.LinkEntity(logicalName, secondEntity.primaryIdAttribute, "objectid", null, null, null, null, null, null, FetchExpression.Filter(FetchExpression.LogicalOperator.and, arrayListOf(linkEntityCondition)))
+
+        val expression = FetchExpression(FetchExpression.Entity("annotation", null, arrayListOf(linkEntity), FetchExpression.Filter(FetchExpression.LogicalOperator.and, arrayListOf(imageCondition))))
+
+        /*val serializer = Persister()
+        val output = ByteArrayOutputStream()
+        serializer.write(expression, output)
+        Log.d("Expression", output.toString())*/
+
+        getMultiple(Annotation(), expression) { annotations, errors ->
+            if (errors != null) {
+                handler(null, errors)
+                return@getMultiple
+            }
+            val TAG = "tAnnotationMultiple"
+            annotations!!.forEach {
+                Log.d(TAG, "$it")
+            }
+            handler(annotations, errors)
+        }
+
+    }
+
+    enum class DefaultEntity(val value: String) {
+        ANNOTATION("annotation"),
+        PRODUCT("idcrm_posproduct"),
+        CATEGORY("idcrm_poscategory"),
+        COMPONENT("idcrm_poscomponent");
+
+        companion object {
+            fun from(findValue: String): DefaultEntity = DefaultEntity.values().first { it.value == findValue }
+        }
+
+        val primaryIdAttribute: String
+            get() {
+                return when (this) {
+                    DefaultEntity.ANNOTATION -> "annotationid"
+                    DefaultEntity.PRODUCT -> "idcrm_posproductid"
+                    DefaultEntity.CATEGORY -> "idcrm_poscategoryid"
+                    DefaultEntity.COMPONENT -> "idcrm_poscomponentid"
+                }
+            }
     }
 
 }

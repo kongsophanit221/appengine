@@ -9,10 +9,21 @@ class ExtensionHelper {
 
 }
 
-enum class Scale {
-    SMALL, MEDIUM, BIG
+enum class ImageScaleType {
+    SMALL, MEDIUM;
+
+    fun subjectName(): String {
+
+        val density = Resources.getSystem().displayMetrics.density
+
+        return when (this) {
+            ImageScaleType.SMALL -> return "small_${density.toInt()}"
+            ImageScaleType.MEDIUM -> return "medium_${density.toInt()}"
+        }
+    }
 }
 
+/*
 fun Resources.screenScale(): Scale {
 
     val density = this.displayMetrics.density
@@ -24,4 +35,4 @@ fun Resources.screenScale(): Scale {
     }
 
     return Scale.SMALL
-}
+}*/

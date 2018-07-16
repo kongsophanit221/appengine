@@ -4,6 +4,7 @@ import android.os.AsyncTask
 import android.util.Log
 import org.simpleframework.xml.convert.AnnotationStrategy
 import org.simpleframework.xml.core.Persister
+import soteca.com.genisysandroid.framwork.helper.decodeSpecialCharacter
 import soteca.com.genisysandroid.framwork.model.decoder.*
 import soteca.com.genisysandroid.framwork.model.encoder.body.Create
 import java.io.BufferedReader

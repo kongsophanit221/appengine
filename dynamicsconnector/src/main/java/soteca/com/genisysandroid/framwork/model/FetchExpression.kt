@@ -42,7 +42,7 @@ class FetchExpression(
 
     companion object {
         fun fetchForms(entityCode: String): FetchExpression {
-            val filter = Filter.singleCondition(Condition("objecttypecode", Operator.equal, entityCode))
+            val filter = Filter.singleCondition(Condition("objecttypecode", Operator.eq, entityCode))
             val fetchExpression = FetchExpression(Entity("systemform", null, null, filter, null), null, null, null, "", null, null, null)
             return fetchExpression
         }
@@ -181,7 +181,7 @@ class FetchExpression(
     enum class LinkType(val value: String) {
         INNER("inner"),
         OUTER("outer"),
-        JOIN("join");
+        JOIN("natural");
 
         override fun toString(): String {
             return value
@@ -234,7 +234,7 @@ class FetchExpression(
             var value: String? = null,
 
             @field:ElementList(entry = "value", inline = true, required = false)
-            var values: ArrayList<Values>? = null,
+            var values: List<Values>? = null,
 
             @field:Attribute(name = "entityname", required = false)
             var entityName: String? = null,
@@ -251,7 +251,7 @@ class FetchExpression(
 
     @Root(strict = false)
     enum class Operator(val value: String) {
-        equal("eq"), notEqual("neq"), notOn("ne"), greaterThan("gt"), greaterOrEqual("ge"),
+        eq("eq"), notEqual("neq"), notOn("ne"), greaterThan("gt"), greaterOrEqual("ge"),
         lessThan("lt"), lessOrEqual("le"), like("like"), notLike("not-like"), `in`("in"),
         notIn("not-in"), between("between"), notBetween("not-between"), `null`("null"),
         notNull("not-null"), yesterday("yesterday"), today("today"), tomorrow("tomorrow"),
