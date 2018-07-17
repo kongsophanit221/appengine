@@ -18,10 +18,11 @@ class CartItem : BaseItem {
     constructor()
 
     constructor(attribute: EntityCollection.Attribute) : super(attribute) {
+
         this.id = attribute!!["idcrm_posorderlineid"]!!.associatedValue.toString()
 
         val productReferent = attribute!!["idcrm_productid"]!!.associatedValue as EntityReference
-        this.product = Datasource.productsGlobal.filter { it.id == productReferent.id }.single()
+//        this.product = Datasource.productsGlobal.filter { it.id == productReferent.id }.single()
 
         this.quantity = attribute!!["idcrm_quantity"]!!.associatedValue as Double
         this.lineNumber = attribute!!["idcrm_lineitemnumber"]!!.associatedValue as Int
@@ -46,6 +47,14 @@ class CartItem : BaseItem {
         this.amount = quantity * pricePerUnit
         this.discountAmount = amount * discount
         this.tax = amount * tax //the calculate of tax if discount amount or amount
+    }
+
+    override fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
+        return CartItem(attribute)
+    }
+
+    override fun toString(): String {
+        return "id: $id, tax: $tax"
     }
 
 }

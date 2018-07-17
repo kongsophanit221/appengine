@@ -2,16 +2,26 @@ package com.soteca.loyaltyuserengine.model
 
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import java.util.*
-import kotlin.collections.ArrayList
 
 class HistoryOrder : Order {
 
-    var orderDate: Date? = null
+    var attribute: EntityCollection.Attribute? = null
 
     constructor()
 
     constructor(attribute: EntityCollection.Attribute) : super(attribute) {
-        orderDate = attribute!!["modifiedon"] as Date
+        this.attribute = attribute
+    }
+
+    override fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
+        return HistoryOrder(attribute)
+    }
+
+    var orderDate: Date? = null
+        get() = attribute!!["idcrm_requesteddeliverydate"]!!.associatedValue as Date
+
+    override fun toString(): String {
+        return "OrderDate: $id, OrderId: $orderDate, totalTax: $totalTax"
     }
 
 }

@@ -7,6 +7,7 @@ import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
 import soteca.com.genisysandroid.framwork.model.FetchExpression
 import soteca.com.genisysandroid.framwork.networking.Errors
+import kotlin.math.exp
 import kotlin.reflect.KClass
 
 open class BaseItem() {
@@ -142,12 +143,26 @@ class Datasource(val context: Context) : AppDatasource {
         })
     }
 
-    fun getOrders(handler: (Order?, Errors?) -> Unit) {
+    fun getLatestOrder(handler: (Order?, Errors?) -> Unit) {
 
+        val conditions = arrayListOf(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, "0"), FetchExpression.Condition("statuscode", FetchExpression.Operator.equal, "527210001"))
+
+        val expression = FetchExpression.fetct(null, "idcrm_posorder", null, null, null, FetchExpression.Filter.andConditions(conditions), "modifiedon", true)
+
+        getMultiple(HistoryOrder(), expression) { orders: ArrayList<Order>?, errors: Errors? ->
+            handler(orders!!.first(), errors)
+        }
     }
 
     fun getOrderLine(handler: (ArrayList<CartItem>?, Errors?) -> Unit) {
 
+        val condition = FetchExpression.Condition("statecode", FetchExpression.Operator.equal, "0")
+
+        val expression = FetchExpression.fetct(null, "idcrm_posorderline", null, null, null, FetchExpression.Filter.singleCondition(condition))
+
+        getMultiple(CartItem(), expression) { cartItems: ArrayList<CartItem>?, errors: Errors? ->
+            handler(cartItems, errors)
+        }
     }
 
 }

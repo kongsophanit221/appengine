@@ -3,14 +3,9 @@ package com.soteca.loyaltyuserengine
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import com.soteca.loyaltyuserengine.model.*
-import com.soteca.loyaltyuserengine.util.Scale
-import com.soteca.loyaltyuserengine.util.screenScale
+import com.soteca.loyaltyuserengine.model.Datasource
 import soteca.com.genisysandroid.framwork.connector.DynamicsConfiguration
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
-import soteca.com.genisysandroid.framwork.model.FetchExpression
-import soteca.com.genisysandroid.framwork.networking.Errors
-import kotlin.reflect.KClass
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,17 +21,28 @@ class MainActivity : AppCompatActivity() {
                 "avm-!dT]PD?7{AZg")
         connector.authenticate(con) { u, e ->
 
-//            Datasource.newInstance(this@MainActivity).getMultiple(Order(), FetchExpression(FetchExpression.Entity("idcrm_posorder")), { orders, error ->
+            //            Datasource.newInstance(this@MainActivity).getMultiple(Order(), FetchExpression(FetchExpression.Entity("idcrm_posorder")), { orders, error ->
 //                orders!!.forEach {
 //                    Log.d("tMain", it.toString())
 //                }
 //            })
 
-            Datasource.newInstance(this@MainActivity).getCategaries({ categories, error ->
+            /*Datasource.newInstance(this).getLatestOrder { order, errors ->
+                Log.d("tMainActivity", "$order")
+            }*/
+
+            /*Datasource.newInstance(this).getOrderLine { cartItems, errors ->
+
+                cartItems!!.forEach {
+                    Log.d("tMainActivity", "$it")
+                }
+            }*/
+
+            /*Datasource.newInstance(this@MainActivity).getCategaries({ categories, error ->
                     categories!!.forEach {
                         Log.d("tMain", it.toString())
                     }
-            })
+            })*/
 
         }
     }
