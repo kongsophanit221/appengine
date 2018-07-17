@@ -38,6 +38,12 @@ class MainActivity : AppCompatActivity() {
                 }
             }*/
 
+            /*Datasource.newInstance(this).getOrders { orders, errors ->
+                orders!!.forEach {
+                    Log.d("tMainActivity", "$it")
+                }
+            }*/
+
             /*Datasource.newInstance(this@MainActivity).getCategaries({ categories, error ->
                     categories!!.forEach {
                         Log.d("tMain", it.toString())

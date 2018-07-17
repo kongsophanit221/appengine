@@ -6,6 +6,7 @@ import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
 import soteca.com.genisysandroid.framwork.model.FetchExpression
+import soteca.com.genisysandroid.framwork.model.encoder.body.KeyValuePair
 import soteca.com.genisysandroid.framwork.networking.Errors
 import kotlin.math.exp
 import kotlin.reflect.KClass
@@ -162,6 +163,42 @@ class Datasource(val context: Context) : AppDatasource {
 
         getMultiple(CartItem(), expression) { cartItems: ArrayList<CartItem>?, errors: Errors? ->
             handler(cartItems, errors)
+        }
+    }
+
+    //getExisting order
+    fun getOrders(handler: (ArrayList<Order>?, Errors?) -> Unit) {
+
+        val condition = FetchExpression.Condition("statecode", FetchExpression.Operator.equal, "0")
+
+        val expression = FetchExpression.fetct(null, "idcrm_posorder", null, null, null, FetchExpression.Filter.singleCondition(condition))
+
+        getMultiple(Order(), expression) { orders: ArrayList<Order>?, errors: Errors? ->
+            handler(orders, errors)
+        }
+    }
+
+    //Add Product/Package to Cart
+    fun create(logicalName: String, entity: EntityCollection.Entity, handler: (String?, Errors?) -> Unit) {
+        val keyValuePairs = entity.attribute
+        val entityCollection = EntityCollection.Entity(keyValuePairs, "", logicalName)
+        DynamicsConnector.default(context).create(entityCollection) { id, errors ->
+            Log.d("tCreate", "$id")
+        }
+    }
+
+    //Delete products/package from cart
+    fun delete(logicalName: String, id: String, handler: (Boolean?, Errors?) -> Unit) {
+        DynamicsConnector.default(context).delete(logicalName, id) { status, errors ->
+            Log.d("tDelete", "$status")
+        }
+    }
+
+    //Update
+    fun update(logicalName: String, id: String, entity: EntityCollection.Entity, handler: (Boolean?, Errors?) -> Unit) {
+        val entityCollection = EntityCollection.Entity(entity.attribute, id, logicalName)
+        DynamicsConnector.default(context).update(entityCollection) { status, errors ->
+            Log.d("tUpdate", "$status")
         }
     }
 

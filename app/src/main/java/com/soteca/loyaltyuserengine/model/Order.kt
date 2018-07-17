@@ -46,4 +46,8 @@ open class Order : BaseItem {
         return Order(attribute)
     }
 
+    override fun toString(): String {
+        return "id: $id, totalTax: $totalTax"
+    }
+
 }
