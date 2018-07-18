@@ -5,6 +5,7 @@ import android.util.Log
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.runBlocking
 import soteca.com.genisysandroid.framwork.authenticator.Authenticator
+import soteca.com.genisysandroid.framwork.authenticator.DynamicAuthenticator
 import soteca.com.genisysandroid.framwork.helper.SharedPreferenceHelper
 import soteca.com.genisysandroid.framwork.model.*
 import soteca.com.genisysandroid.framwork.model.decoder.*
@@ -19,36 +20,32 @@ import soteca.com.genisysandroid.framwork.networking.RequestTask
 /**
  * Created by SovannMeasna on 4/12/18.
  */
-class DynamicsConnector(private val ctx: Context) {
+class DynamicsConnector {
 
     companion object {
-        
+
         private var shared: DynamicsConnector? = null
 
         fun default(context: Context): DynamicsConnector {
             if (shared == null) {
-                shared = DynamicsConnector(context)
+                shared = DynamicsConnector(context, DynamicAuthenticator(context))
             }
             return shared!!
         }
     }
 
-    var configuration: DynamicsConfiguration?
-        set(value) {
-            authenticator = Authenticator(ctx, value!!)
-        }
-        get() {
-            return null
-        }
-
     val crmUrl: String
         get() = authenticator!!.crmUrl
 
-    var authenticator: Authenticator? = Authenticator(ctx)
-
-    var allEntities: ArrayList<EntityMetadata>? = null
-
     private val TAG = "tDynamic"
+    private var authenticator: Authenticator? = null
+    private var context: Context
+    private var allEntities: ArrayList<EntityMetadata>? = null
+
+    constructor(context: Context, authenticator: Authenticator) {
+        this.context = context
+        this.authenticator = authenticator
+    }
 
     private fun preExecutionCheck(): Triple<String, String, String> = runBlocking {
 
@@ -64,7 +61,7 @@ class DynamicsConnector(private val ctx: Context) {
 
     fun authenticate(configuration: DynamicsConfiguration, done: (DynamicsUser?, Errors?) -> Unit) {
 
-        authenticator = Authenticator(ctx, configuration)
+        authenticator!!.setConfiguration(configuration)
 
         try {
             authenticator!!.authenticate()
@@ -78,7 +75,7 @@ class DynamicsConnector(private val ctx: Context) {
                     this.retrieveUserPrivileges(userIdentify.userId, { rolePrivileges, error ->
 
                         if (error == null) {
-                            val user = DynamicsUser(ctx)
+                            val user = DynamicsUser(context)
                             user.userIdentify = userIdentify
                             user.userRolePrivileges = rolePrivileges
 
@@ -91,7 +88,7 @@ class DynamicsConnector(private val ctx: Context) {
                             }
 
                             val userInformation = hashMapOf("USER_IDENTIFY" to userIdentifyData, "USER_ROLEPRIVILEGE" to userRoleJSONObjects)
-                            SharedPreferenceHelper.getInstance(ctx).setUserInformation(userInformation)
+                            SharedPreferenceHelper.getInstance(context).setUserInformation(userInformation)
 
                             done(user, error)
                         } else {
@@ -204,28 +201,6 @@ class DynamicsConnector(private val ctx: Context) {
             Log.d(TAG, "size: " + entityMetadataListResponse!!.entityMetadatas!!.size)
             done(entityMetadataListResponse.entityMetadatas, null)
         }).execute()
-
-//        val soapExecuteTag = SoapExecuteTag(SoapExecuteTag.SoapExecuteTagType.retrieveAllEntities)
-//        val envelope = SoapEnvelope(crmUrl, securityContent, soapExecuteTag, SoapEnvelope.SoapEnvelopeType.execute)
-//        val request = DynamicConnectorRequest(crmUrl, envelope)
-//
-//        RequestTask<EntityMetadataListDecoder>(request, EntityMetadataListDecoder(), { entityMetadataListDecoder, responseError ->
-//
-//            if (responseError != null) {
-//
-//                if (responseError.error == AuthenticationError.invalidSecurityToken) {
-//                    authenticator!!.clearSecurityToken()
-//                    retrieveAllEntities(done)
-//                } else {
-//                    done(null, responseError.error)
-//                }
-//
-//                return@RequestTask
-//            }
-//
-//            done(entityMetadataListDecoder!!.entityMetadatas, null)
-//
-//        }).execute()
     }
 
     fun retrieveEntity(metadataId: String, done: (EntityMetadata?, Errors?) -> Unit) {
@@ -258,29 +233,6 @@ class DynamicsConnector(private val ctx: Context) {
             Log.d(TAG, "size: " + entityMetadataDecoder!!.entityMetadata)
             done(entityMetadataDecoder.entityMetadata, null)
         }).execute()
-
-
-//        val soapExecuteTag = SoapExecuteTag(metadataId, SoapExecuteTag.SoapExecuteTagType.retrieveEntity)
-//        val envelope = SoapEnvelope(crmUrl, securityContent, soapExecuteTag, SoapEnvelope.SoapEnvelopeType.execute)
-//        val request = DynamicConnectorRequest(crmUrl, envelope)
-//
-//        RequestTask<EntityMetadataDecoder>(request, EntityMetadataDecoder(), { entityMetadataDecoder, responseError ->
-//
-//            if (responseError != null) {
-//
-//                if (responseError.error == AuthenticationError.invalidSecurityToken) {
-//                    authenticator!!.clearSecurityToken()
-//                    retrieveEntity(metadataId, done)
-//                } else {
-//                    done(null, responseError.error)
-//                }
-//
-//                return@RequestTask
-//            }
-//
-//            done(entityMetadataDecoder!!.entityMetadata, null)
-//
-//        }).execute()
     }
 
     fun whoAmI(done: (identifier: MyIdentifier?, Errors?) -> Unit) {
@@ -344,35 +296,6 @@ class DynamicsConnector(private val ctx: Context) {
             Log.d(TAG, retrieveMultipleResponse!!.results!!.entityName)
             done(retrieveMultipleResponse.results, null)
         }).execute()
-
-//        val soapExecuteTag = SoapExecuteTag(fetchExpression, SoapExecuteTag.SoapExecuteTagType.retrieveMultiple)
-//        val envelope = SoapEnvelope(crmUrl, securityContent, soapExecuteTag, SoapEnvelope.SoapEnvelopeType.execute)
-//        val request = DynamicConnectorRequest(crmUrl, envelope)
-//
-//        RequestTask<RetrieveMultipleDecoder>(request, RetrieveMultipleDecoder(), { retrieveMultipleDecoder, responseError ->
-//
-//            if (responseError != null) {
-//
-//                if (responseError.error == AuthenticationError.invalidSecurityToken) {
-//                    authenticator!!.clearSecurityToken()
-//                    retrieveMultiple(fetchExpression, done)
-//                } else {
-//                    done(null, responseError.error)
-//                }
-//
-//                return@RequestTask
-//            }
-//            retrieveMultipleDecoder!!.results!!.entityList!!.forEach {
-//
-//                it.keyValuePairList!!.forEach {
-//                    Log.d(TAG, "key: " + it.key)
-//                    Log.d(TAG, "value: " + it.value)
-//                }
-//            }
-//
-//            done(null, responseError)
-//
-//        }).execute()
     }
 
     // Not yet test, currently done setState XML, requestState Fullfill same iOS

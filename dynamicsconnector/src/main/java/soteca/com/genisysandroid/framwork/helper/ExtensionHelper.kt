@@ -1,8 +1,5 @@
 package soteca.com.genisysandroid.framwork.helper
 
-import android.util.Log
-import org.json.JSONArray
-import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 

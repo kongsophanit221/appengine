@@ -135,7 +135,7 @@ data class EntityCollection(
         class data(val value: String) : ValueType()
         class entityReference(val value: EntityReference) : ValueType()
         class entityCollection(val value: EntityCollection) : ValueType()
-        class aliasedValue(val value: String) : ValueType()
+        class aliasedValue(val value: AliasedType) : ValueType()
 
         val associatedValue: Any
             get() {
@@ -327,7 +327,9 @@ data class EntityCollection(
                     value.value = EntityCollection.ValueType.entityCollection(entityCollection)
                 }
                 Type.ALIASED_VALUE -> {
-                    value.value = EntityCollection.ValueType.aliasedValue(node.getNext("Value").value)
+                    val serializer = Persister()
+                    val aliasedType = serializer.read(AliasedType::class.java, node)
+                    value.value = EntityCollection.ValueType.aliasedValue(aliasedType)
                 }
                 Type.DATA -> {
                     value.value = EntityCollection.ValueType.data(node.value)
@@ -338,6 +340,18 @@ data class EntityCollection(
         }
     }
 }
+
+@Root(strict = false)
+data class AliasedType(
+        @field:Element(name = "AttributeLogicalName", required = false)
+        var attributeLogicalName: String? = null,
+
+        @field:Element(name = "EntityLogicalName", required = false)
+        var entityLogicalName: String? = null,
+
+        @field:Element(name = "Value", required = false)
+        var value: EntityCollection.ValueType? = null
+)
 
 
 @Root(strict = false)

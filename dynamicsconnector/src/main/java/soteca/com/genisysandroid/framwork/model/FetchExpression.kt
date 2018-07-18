@@ -1,11 +1,6 @@
 package soteca.com.genisysandroid.framwork.model
 
 import org.simpleframework.xml.*
-import org.simpleframework.xml.convert.Convert
-import org.simpleframework.xml.convert.Converter
-import org.simpleframework.xml.stream.InputNode
-import org.simpleframework.xml.stream.OutputNode
-import soteca.com.genisysandroid.framwork.model.encoder.body.Parameters
 
 @Root(name = "fetch")
 @Order(attributes = ["top", "count", "page", "mapping", "version"])
@@ -155,41 +150,62 @@ class FetchExpression(
     }
 
     @Root(strict = false)
-    class LinkEntity(
-            @field:Attribute(name = "name", required = false)
-            var name: String? = "",
+    class LinkEntity(name: String, from: String, to: String, alias: String? = null, linkType: LinkType? = null, visible: Boolean? = false,
+                     intersect: Boolean? = false, val attributes: ArrayList<Attributee>? = null, order: Order? = null, filter: Filter? = null,
+                     linkEntities: ArrayList<LinkEntity>? = null) {
 
-            @field:Attribute(name = "from", required = false)
-            var from: String? = "",
+        @field:Attribute(name = "name", required = false)
+        private var _name: String? = name
 
-            @field:Attribute(name = "to", required = false)
-            var to: String? = "",
+        @field:Attribute(name = "from", required = false)
+        private var _from: String? = from
 
-            @field:Attribute(name = "alias", required = false)
-            var alias: String? = null,
+        @field:Attribute(name = "to", required = false)
+        private var _to: String? = to
 
-            var linkType: LinkType? = null,
+        @field:Attribute(name = "alias", required = false)
+        private var _alias: String? = alias
 
-            @field:Attribute(name = "visible", required = false)
-            var visible: Boolean? = false,
-
-            @field:Attribute(name = "intersect", required = false)
-            var intersect: Boolean? = false,
-
-            @field:ElementList(entry = "attribute", inline = true, required = false)
-            var attributes: ArrayList<Attributee>? = null,
-
-            @field:Element(name = "order", required = false)
-            var order: Order? = null,
-
-            @field:Element(name = "filter", required = false)
-            var filter: Filter? = null,
-
-            @field:ElementList(entry = "link-entity", inline = true, required = false)
-            var linkEntities: ArrayList<LinkEntity>? = null
-    ) {
         @field:Attribute(name = "link-type", required = false)
         private var linkTypeValue: String? = linkType?.let { it.value }
+
+        @field:ElementList(entry = "attribute", inline = true, required = false)
+        private var _attributes: ArrayList<Attributee>? = attributes
+
+        @field:Attribute(name = "visible", required = false)
+        private var _visible: Boolean? = visible
+
+        @field:Attribute(name = "intersect", required = false)
+        var _intersect: Boolean? = intersect
+
+        @field:Element(name = "order", required = false)
+        var _order: Order? = order
+
+        @field:Element(name = "filter", required = false)
+        var _filter: Filter? = filter
+
+        @field:ElementList(entry = "link-entity", inline = true, required = false)
+        var _linkEntities: ArrayList<LinkEntity>? = linkEntities
+
+        var allAttributes: String? = null //= attributes.let { null } ?: "dasda"
+            @Element(name = "all-attributes", required = false)
+            get() {
+                if (attributes == null || attributes!!.size <= 0) {
+                    return ""
+                }
+                return null
+            }
+
+        companion object {
+
+            fun singleJoin(linkEntity: FetchExpression.LinkEntity): ArrayList<LinkEntity> {
+                return arrayListOf(linkEntity)
+            }
+
+            fun multipleJoin(linkEntities: ArrayList<LinkEntity>): ArrayList<LinkEntity> {
+                return linkEntities
+            }
+        }
     }
 
     @Root(strict = false)
