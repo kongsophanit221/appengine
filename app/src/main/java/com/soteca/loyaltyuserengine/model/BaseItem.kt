@@ -148,8 +148,8 @@ class Datasource(val context: Context) : AppDatasource {
     fun getLatestOrder(handler: (HistoryOrder?, Errors?) -> Unit) {
 
         val statecode = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.stateCode)
-        val statuscode = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.OPEN.statusCode)
-        val conditions = arrayListOf(statecode, statuscode)
+        val statusReason = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.OPEN.statusReason)
+        val conditions = arrayListOf(statecode, statusReason)
         val filters = FetchExpression.Filter.andConditions(conditions)
 
         val modifiedon = FetchExpression.Order(attribute = "modifiedon", descending = true)
@@ -191,7 +191,7 @@ class Datasource(val context: Context) : AppDatasource {
         COMPLETE("Completed"),
         CANCEL("Cancel");
 
-        val statusCode: String
+        val statusReason: String
             get() {
                 return when (this) {
                     StatusReason.OPEN -> "527210000"
@@ -217,20 +217,16 @@ class Datasource(val context: Context) : AppDatasource {
     }
 
     //getExisting order
-    fun getExistedOrders(handler: (ArrayList<Order>?, Errors?) -> Unit) {
+    fun getExistedOrders(handler: (CartOrder?, Errors?) -> Unit) {
+        val linkEntity = FetchExpression.LinkEntity(name = "idcrm_posorderline", from = "idcrm_order", to = "idcrm_posorderid", alias = "orderItem")
 
-        val condition = FetchExpression.Condition("statecode", FetchExpression.Operator.equal, "0")
-
-        val expression = FetchExpression.fetct(null, "idcrm_posorder", null, null, null, FetchExpression.Filter.singleCondition(condition))
-
-        getMultiple(Order(), expression) { orders: ArrayList<Order>?, errors: Errors? ->
-            if (errors != null) {
-                handler(null, errors)
-                return@getMultiple
-            }
-
-            handler(orders, errors)
-        }
+        val linkentities = FetchExpression.LinkEntity()
+        val statecode = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.stateCode)
+        val statusreason = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.OPEN.statusReason)
+        val filter = FetchExpression.Filter.andConditions(arrayListOf(statecode, statusreason))
+        val order = FetchExpression.Order(attribute = "modifiedon", alias = null, descending = true)
+        val entity = FetchExpression.Entity(name = "idcrm_posorder", linkEntities = arrayListOf(linkentities), filter = filter, orders = arrayListOf(order))
+        val expression = FetchExpression(entity = entity)
     }
 
     //Add Product/Package to Cart

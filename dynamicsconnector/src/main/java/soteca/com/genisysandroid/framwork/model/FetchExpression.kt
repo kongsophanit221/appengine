@@ -1,11 +1,6 @@
 package soteca.com.genisysandroid.framwork.model
 
 import org.simpleframework.xml.*
-import org.simpleframework.xml.convert.Convert
-import org.simpleframework.xml.convert.Converter
-import org.simpleframework.xml.stream.InputNode
-import org.simpleframework.xml.stream.OutputNode
-import soteca.com.genisysandroid.framwork.model.encoder.body.Parameters
 
 @Root(name = "fetch")
 @Order(attributes = ["top", "count", "page", "mapping", "version"])

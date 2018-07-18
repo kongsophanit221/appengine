@@ -1,7 +1,7 @@
 package soteca.com.genisysandroid.framwork.model.decoder
 
 import org.simpleframework.xml.*
-import soteca.com.genisysandroid.framwork.authenticator.Authenticator
+import soteca.com.genisysandroid.framwork.authenticator.DynamicAuthenticator
 import soteca.com.genisysandroid.framwork.helper.crmFormatToDate
 import soteca.com.genisysandroid.framwork.networking.Request
 
@@ -31,12 +31,12 @@ data class TokenDecoder(
         @field:Element(name = "CipherValue", required = false)
         private var secondToken: String? = null) : Decoder(req) {
 
-    var token: Authenticator.Token? = null
+    var token: DynamicAuthenticator.Token? = null
         get() {
             if (firstToken == null && secondToken == null && keyIdentifier == null && expirationDate == null) {
                 return null
             }
-            return Authenticator.Token(firstToken!!, secondToken!!, keyIdentifier!!, expirationDate!!.crmFormatToDate())
+            return DynamicAuthenticator.Token(firstToken!!, secondToken!!, keyIdentifier!!, expirationDate!!.crmFormatToDate())
         }
 
 }
