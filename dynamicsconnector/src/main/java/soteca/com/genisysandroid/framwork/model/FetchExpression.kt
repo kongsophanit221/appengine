@@ -266,7 +266,7 @@ class FetchExpression(
             var value: String? = null,
 
             @field:ElementList(entry = "value", inline = true, required = false)
-            var values: ArrayList<Values>? = null,
+            var values: List<Values>? = null,
 
             @field:Attribute(name = "entityname", required = false)
             var entityName: String? = null,
