@@ -21,7 +21,8 @@ class HistoryOrder : Order {
         get() = attribute!!["idcrm_requesteddeliverydate"]!!.associatedValue as Date
 
     override fun toString(): String {
-        return "OrderDate: $id, OrderId: $orderDate, totalTax: $totalTax"
+        return "id: $id, totalTax: $totalTax, totalDiscount: $totalDiscount, " +
+                "totalItemAmount: $totalItemAmount, totalAmount: $totalAmount, venue: $venue, " +
+                "name: $name, requestDeliverDate: $requestDeliverDate, orderItems: $orderItems, orderDate: $orderDate"
     }
-
 }

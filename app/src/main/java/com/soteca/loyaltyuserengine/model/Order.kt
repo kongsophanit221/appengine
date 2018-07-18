@@ -45,9 +45,4 @@ open class Order : BaseItem {
     override fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
         return Order(attribute)
     }
-
-    override fun toString(): String {
-        return "id: $id, totalTax: $totalTax"
-    }
-
 }

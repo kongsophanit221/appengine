@@ -27,8 +27,8 @@ class MainActivity : AppCompatActivity() {
 //                }
 //            })
 
-            /*Datasource.newInstance(this).getLatestOrder { order, errors ->
-                Log.d("tMainActivity", "$order")
+            /*Datasource.newInstance(this).getLatestOrder { historyOrder, errors ->
+                Log.d("tMainActivity", "$historyOrder")
             }*/
 
             /*Datasource.newInstance(this).getOrderLine { cartItems, errors ->

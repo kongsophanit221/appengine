@@ -3,6 +3,7 @@ package com.soteca.loyaltyuserengine.model
 import android.content.Context
 import android.util.Log
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
+import soteca.com.genisysandroid.framwork.model.AttributeMetadata
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
 import soteca.com.genisysandroid.framwork.model.FetchExpression
@@ -144,36 +145,90 @@ class Datasource(val context: Context) : AppDatasource {
         })
     }
 
-    fun getLatestOrder(handler: (Order?, Errors?) -> Unit) {
+    fun getLatestOrder(handler: (HistoryOrder?, Errors?) -> Unit) {
 
-        val conditions = arrayListOf(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, "0"), FetchExpression.Condition("statuscode", FetchExpression.Operator.equal, "527210001"))
+        val statecode = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.stateCode)
+        val statuscode = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.OPEN.statusCode)
+        val conditions = arrayListOf(statecode, statuscode)
+        val filters = FetchExpression.Filter.andConditions(conditions)
 
-        val expression = FetchExpression.fetct(null, "idcrm_posorder", null, null, null, FetchExpression.Filter.andConditions(conditions), "modifiedon", true)
+        val modifiedon = FetchExpression.Order(attribute = "modifiedon", descending = true)
+        val orders = arrayListOf(modifiedon)
 
-        getMultiple(HistoryOrder(), expression) { orders: ArrayList<Order>?, errors: Errors? ->
-            handler(orders!!.first(), errors)
+        val entity = FetchExpression.Entity(name = "idcrm_posorder", filter = filters, orders = orders)
+
+        val expression = FetchExpression(top = 1, entity = entity)
+
+        getMultiple(HistoryOrder(), expression) { historyOrders: ArrayList<HistoryOrder>?, errors: Errors? ->
+            if (errors != null) {
+                handler(null, errors)
+                return@getMultiple
+            }
+
+            val historyOrder: HistoryOrder = historyOrders!!.single()
+            getOrderLine(historyOrder.id) { items: ArrayList<CartItem>?, errors: Errors? ->
+                historyOrder.addExistCartItems(items!!)
+                handler(historyOrder, errors)
+            }
         }
     }
 
-    fun getOrderLine(handler: (ArrayList<CartItem>?, Errors?) -> Unit) {
+    enum class StateCode(val value: String) {
+        ACTIVE("0"),
+        INACTIVE("1");
 
-        val condition = FetchExpression.Condition("statecode", FetchExpression.Operator.equal, "0")
+        val stateCode: String
+            get() {
+                return when (this) {
+                    StateCode.ACTIVE -> "0"
+                    StateCode.INACTIVE -> "1"
+                }
+            }
+    }
 
-        val expression = FetchExpression.fetct(null, "idcrm_posorderline", null, null, null, FetchExpression.Filter.singleCondition(condition))
+    enum class StatusReason(val value: String) {
+        OPEN("Open"),
+        COMPLETE("Completed"),
+        CANCEL("Cancel");
+
+        val statusCode: String
+            get() {
+                return when (this) {
+                    StatusReason.OPEN -> "527210000"
+                    StatusReason.COMPLETE -> "527210001"
+                    StatusReason.CANCEL -> "527210002"
+                }
+            }
+    }
+
+    fun getOrderLine(id: String, handler: (ArrayList<CartItem>?, Errors?) -> Unit) {
+
+        val order = FetchExpression.Condition(attribute = "idcrm_order", operator = FetchExpression.Operator.equal, value = id)
+        val stateCode = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.stateCode)
+        val expression = FetchExpression.fetct(entityType = "idcrm_posorderline", filter = FetchExpression.Filter.andConditions(arrayListOf(order, stateCode)))
 
         getMultiple(CartItem(), expression) { cartItems: ArrayList<CartItem>?, errors: Errors? ->
+            if (errors != null) {
+                handler(null, errors)
+                return@getMultiple
+            }
             handler(cartItems, errors)
         }
     }
 
     //getExisting order
-    fun getOrders(handler: (ArrayList<Order>?, Errors?) -> Unit) {
+    fun getExistedOrders(handler: (ArrayList<Order>?, Errors?) -> Unit) {
 
         val condition = FetchExpression.Condition("statecode", FetchExpression.Operator.equal, "0")
 
         val expression = FetchExpression.fetct(null, "idcrm_posorder", null, null, null, FetchExpression.Filter.singleCondition(condition))
 
         getMultiple(Order(), expression) { orders: ArrayList<Order>?, errors: Errors? ->
+            if (errors != null) {
+                handler(null, errors)
+                return@getMultiple
+            }
+
             handler(orders, errors)
         }
     }

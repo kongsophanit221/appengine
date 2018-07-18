@@ -52,9 +52,4 @@ class CartItem : BaseItem {
     override fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
         return CartItem(attribute)
     }
-
-    override fun toString(): String {
-        return "id: $id, tax: $tax"
-    }
-
 }
