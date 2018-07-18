@@ -28,7 +28,6 @@ interface AppDatasource {
     fun <T : BaseItem> getMultiple(type: T, fetchExpression: FetchExpression, handler: (ArrayList<T>?, Errors?) -> Unit)
 }
 
-// temporary, datasource from online
 class Datasource(val context: Context) : AppDatasource {
 
     companion object {
@@ -79,7 +78,9 @@ class Datasource(val context: Context) : AppDatasource {
 
     fun getCategaries(handler: (ArrayList<Category>?, Errors?) -> Unit) {
 
-        val expression = FetchExpression.fetct(entityType = "idcrm_poscategory", filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
+        val attributes = arrayListOf("idcrm_poscategoryid", "idcrm_name")
+        val expression = FetchExpression.fetct(entityType = "idcrm_poscategory", attributes = attributes, filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
+
         getMultiple(Category(), expression) { categories: ArrayList<Category>?, errors: Errors? ->
 
             if (errors != null) {
@@ -102,7 +103,9 @@ class Datasource(val context: Context) : AppDatasource {
 
     fun getProducts(handler: (ArrayList<Product>?, Errors?) -> Unit) {
 
-        val expression = FetchExpression.fetct(entityType = "idcrm_poscomponent", filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
+        val attributes = arrayListOf("idcrm_poscomponentid", "idcrm_name", "idcrm_product", "idcrm_applyto")
+        val expression = FetchExpression.fetct(entityType = "idcrm_poscomponent", attributes = attributes, filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
+
         getMultiple(Component(), expression, { components: ArrayList<Component>?, errors: Errors? ->
 
             if (errors != null) {
@@ -110,7 +113,10 @@ class Datasource(val context: Context) : AppDatasource {
                 return@getMultiple
             }
 
-            val expression = FetchExpression.fetct(entityType = "idcrm_posproduct", filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
+            val attributes = arrayListOf("idcrm_posproductid", "idcrm_name", "idcrm_pricesell", "idcrm_category", "idcrm_venue",
+                    "idcrm_min", "idcrm_max", "idcrm_bundle")
+            val expression = FetchExpression.fetct(entityType = "idcrm_posproduct", attributes = attributes, filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
+
             getMultiple(Product(), expression, { products, errors ->
 
                 if (errors != null) {

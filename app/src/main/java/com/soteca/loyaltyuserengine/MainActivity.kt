@@ -38,29 +38,11 @@ class MainActivity : AppCompatActivity() {
 //                }
 //            })
 
-//            Datasource.newInstance(this@MainActivity).getCategaries({ categories, error ->
-//                    categories!!.forEach {
-//                        Log.d("tMain", it.toString())
-//                    }
-//            })
-            val linkEntityMax = FetchExpression.LinkEntity(name = "idcrm_order", from = "idcrm_posorderid", to = "idcrm_posorderid", alias = "maxDate", attributes = arrayListOf(FetchExpression.Attributee(""))))
-
-            val linkEntity = FetchExpression.LinkEntity(name = "idcrm_posorderline", from = "idcrm_order", to = "idcrm_posorderid", alias = "orderItem", attributes = null)
-
-            val entity = FetchExpression.Entity(name = "idcrm_posorder", linkEntities = FetchExpression.LinkEntity.multipleJoin(arrayListOf(linkEntityMax, linkEntity)),
-                    filter = FetchExpression.Filter.andConditions(arrayListOf(FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = "0"),
-                            FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = "527210001"))))
-            val expression = FetchExpression(entity)
-
-            val outputStream: OutputStream = ByteArrayOutputStream()
-            val serializer = Persister(AnnotationStrategy(), Format(0))
-            serializer.write(expression, outputStream)
-            val result = outputStream.toString()
-
-            Datasource.newInstance(this@MainActivity).getMultiple(Order(), expression, { categories, error ->
-
+            Datasource.newInstance(this@MainActivity).getCategaries({ categories, error ->
+                    categories!!.forEach {
+                        Log.d("tMain", it.toString())
+                    }
             })
-
         }
     }
 }
