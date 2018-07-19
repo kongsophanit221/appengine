@@ -220,27 +220,19 @@ class Datasource(val context: Context) : AppDatasource {
     }
 
     //getExisting order
-    fun getExistedOrders(handler: (CartOrder?, Errors?) -> Unit) {
+    fun getExistedOrders(orderId: String, handler: (ArrayList<CartItem>?, Errors?) -> Unit) {
 
-        val linkEntity = FetchExpression.LinkEntity(name = "idcrm_posorderline", from = "idcrm_order", to = "idcrm_posorderid", alias = "orderItem", attributes = null)
-        val linkentities = FetchExpression.LinkEntity.singleJoin(linkEntity)
-        val statecode = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.stateCode)
-        val statusreason = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.OPEN.statusReason)
-        val filter = FetchExpression.Filter.andConditions(arrayListOf(statecode, statusreason))
-        val order = FetchExpression.Order(attribute = "modifiedon", alias = null, descending = true)
-        val entity = FetchExpression.Entity(name = "idcrm_posorder", linkEntities = linkentities, filter = filter, orders = arrayListOf(order))
-        val expression = FetchExpression(entity = entity)
-        val TAG = "tBaseItem"
-        DynamicsConnector.default(context).retrieveMultiple(fetchExpression = expression) { entityCollection, errors ->
+        val order = FetchExpression.Condition(attribute = "idcrm_order", operator = FetchExpression.Operator.equal, value = orderId)
+        val stateCode = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.stateCode)
+        val statusReason = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.COMPLETE.statusReason)
+        val expression = FetchExpression.fetct(entityType = "idcrm_posorderline", filter = FetchExpression.Filter.andConditions(arrayListOf(order, stateCode, statusReason)))
+
+        getMultiple(CartItem(), expression) { cartItems: ArrayList<CartItem>?, errors: Errors? ->
             if (errors != null) {
                 handler(null, errors)
-                return@retrieveMultiple
+                return@getMultiple
             }
-            Log.d(TAG, "EntityCollection: $entityCollection")
-            /*val carts = entityCollection!!.entityList!!.map { eachEntity ->
-                Log.d(TAG, "EachEntity: $eachEntity")
-            }*/
-
+            handler(cartItems, errors)
         }
     }
 
