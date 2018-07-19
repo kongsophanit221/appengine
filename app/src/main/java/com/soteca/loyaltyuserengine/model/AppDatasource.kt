@@ -17,38 +17,21 @@ interface AppDatasource {
     fun <T : BaseItem> getMultiple(type: T, fetchExpression: FetchExpression, handler: (ArrayList<T>?, Errors?) -> Unit)
 
     fun <T : BaseItem> getMultiple(type: T, alias: String, fetchExpression: FetchExpression, handler: (ArrayList<T>?, ArrayList<Annotation>?, Errors?) -> Unit)
+
+    fun delete(logicalName: String, id: String, handler: (Boolean?, Errors?) -> Unit)
+
+    fun update(entity: EntityCollection.Entity, handler: (Boolean?, Errors?) -> Unit)
+
 }
 
-open class BaseItem() {
-
-    constructor(attribute: EntityCollection.Attribute) : this()
-
-    open val attributePush: EntityCollection.Attribute? = null
-        get
-
-    open fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
-        return BaseItem(attribute)
-    }
-}
-
-class Datasource(val context: Context) : AppDatasource {
-
-    companion object {
-        var productsGlobal: ArrayList<Product> = ArrayList()
-        private var _shared: Datasource? = null
-        fun newInstance(context: Context): Datasource {
-            if (_shared == null) {
-                _shared = Datasource(context)
-            }
-            return _shared!!
-        }
-    }
+private class AppDatasourceImp(val context: Context) : AppDatasource {
 
     override fun <T : BaseItem> get(type: T, reference: EntityReference, handler: (T?, Errors?) -> Unit) {
         val primaryId = DefaultEntity(reference.logicalName!!).primaryIdAttribute
         val expression = FetchExpression.fetct(count = 1, entityType = reference.logicalName!!, filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition(primaryId, FetchExpression.Operator.equal, reference.id)))
 
         DynamicsConnector.default(context).retrieveMultiple(expression) { entityCollection, errors ->
+
             if (errors != null) {
                 handler(null, errors)
                 return@retrieveMultiple
@@ -80,6 +63,7 @@ class Datasource(val context: Context) : AppDatasource {
     override fun <T : BaseItem> getMultiple(type: T, alias: String, fetchExpression: FetchExpression, handler: (ArrayList<T>?, ArrayList<Annotation>?, Errors?) -> Unit) {
 
         DynamicsConnector.default(context).retrieveMultiple(fetchExpression) { entityCollection, errors ->
+
             if (errors != null) {
                 handler(null, null, errors)
                 return@retrieveMultiple
@@ -106,8 +90,67 @@ class Datasource(val context: Context) : AppDatasource {
 
             handler(data, annotations, null)
         }
+    }
 
+    override fun delete(logicalName: String, id: String, handler: (Boolean?, Errors?) -> Unit) {
 
+        DynamicsConnector.default(context).delete(logicalName, id, { delete, errors ->
+
+            if (errors != null) {
+                handler(null, errors)
+                return@delete
+            }
+
+            handler(delete, errors)
+
+        })
+    }
+
+    override fun update(entity: EntityCollection.Entity, handler: (Boolean?, Errors?) -> Unit) {
+
+        DynamicsConnector.default(context).update(entity, { isUpdated, errors ->
+
+            if (errors != null) {
+                handler(null, errors)
+                return@update
+            }
+
+            handler(isUpdated, errors)
+
+        })
+    }
+}
+
+open class BaseItem() {
+
+    constructor(attribute: EntityCollection.Attribute) : this()
+
+    open val attributePush: EntityCollection.Attribute? = null
+        get
+
+    open fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
+        return BaseItem(attribute)
+    }
+}
+
+class Datasource {
+
+    companion object {
+        var productsGlobal: ArrayList<Product> = ArrayList()
+        
+        private var _shared: Datasource? = null
+        fun newInstance(context: Context): Datasource {
+            if (_shared == null) {
+                _shared = Datasource(context)
+            }
+            return _shared!!
+        }
+    }
+
+    private var appData: AppDatasourceImp
+
+    constructor(context: Context) {
+        this.appData = AppDatasourceImp(context)
     }
 
     fun getCategaries(handler: (ArrayList<Category>?, Errors?) -> Unit) {
@@ -115,7 +158,7 @@ class Datasource(val context: Context) : AppDatasource {
         val attributes = arrayListOf("idcrm_poscategoryid", "idcrm_name")
         val expression = FetchExpression.fetct(entityType = "idcrm_poscategory", attributes = attributes, filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
 
-        getMultiple(Category(), expression) { categories: ArrayList<Category>?, errors: Errors? ->
+        appData.getMultiple(Category(), expression) { categories: ArrayList<Category>?, errors: Errors? ->
 
             if (errors != null) {
                 handler(null, errors)
@@ -146,7 +189,7 @@ class Datasource(val context: Context) : AppDatasource {
 
         }
 
-        getMultiple(Category(), expression) { categories: ArrayList<Category>?, errors: Errors? ->
+        appData.getMultiple(Category(), expression) { categories: ArrayList<Category>?, errors: Errors? ->
 
             if (errors != null) {
                 handler(null, errors)
@@ -199,7 +242,7 @@ class Datasource(val context: Context) : AppDatasource {
 
         val expression = FetchExpression(entity = entity)
 
-        getMultiple(Product(), alias, expression, { products, annotations, errors ->
+        appData.getMultiple(Product(), alias, expression, { products, annotations, errors ->
 
             if (errors != null) {
                 handler(null, errors)
@@ -214,23 +257,13 @@ class Datasource(val context: Context) : AppDatasource {
 
             handler(products, null)
         })
-
-//        getMultiple(Product(), expression, { products, errors ->
-//
-//            if (errors != null) {
-//                handler(null, errors)
-//                return@getMultiple
-//            }
-//
-
-//        })
     }
 
     fun getComponents(handler: (ArrayList<Component>?, Errors?) -> Unit) {
         val attributes = arrayListOf("idcrm_poscomponentid", "idcrm_name", "idcrm_product", "idcrm_applyto")
         val expression = FetchExpression.fetct(entityType = "idcrm_poscomponent", attributes = attributes, filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
 
-        getMultiple(Component(), expression, { components: ArrayList<Component>?, errors: Errors? ->
+        appData.getMultiple(Component(), expression, { components: ArrayList<Component>?, errors: Errors? ->
 
             if (errors != null) {
                 handler(null, errors)
@@ -266,6 +299,20 @@ class Datasource(val context: Context) : AppDatasource {
                 handler(finalProducts, null)
             }
         }
+    }
+
+    fun deleteCartItem(id: String, handler: (Boolean?, Errors?) -> Unit) {
+
+        appData.delete("idcrm_posorderline", id, { isDelete, errors ->
+
+            if (errors != null) {
+                handler(null, errors)
+                return@delete
+            }
+
+            handler(isDelete, null)
+        })
+
     }
 
 //    fun getAnnotation(entityReference: EntityReference?, scaleType: ImageScaleType, handler: (Annotation?, Errors?) -> Unit) {
