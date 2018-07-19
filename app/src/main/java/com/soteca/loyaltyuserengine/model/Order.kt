@@ -21,21 +21,14 @@ open class Order : BaseItem {
 
     constructor(attribute: EntityCollection.Attribute) : super(attribute) {
         this.id = attribute!!["idcrm_posorderid"]!!.associatedValue.toString()
-        this.venue = attribute!!["idcrm_venue"]!!.associatedValue as EntityReference
+        this.venue = attribute!!["idcrm_venue"]?.associatedValue as? EntityReference
         this.name = attribute!!["idcrm_name"]!!.associatedValue.toString()
-        this.totalItemAmount = attribute!!["idcrm_totalitemamount"]!!.associatedValue as Double
-        this.totalAmount = attribute!!["idcrm_totalamount"]!!.associatedValue as Double
 
-        this.totalTax = attribute!!["idcrm_totaltax"]?.let {
-            it.associatedValue as Double
-        } ?: 0.0
-        this.totalDiscount = attribute!!["idcrm_totaldiscount"]?.let {
-            it.associatedValue as Double
-        } ?: 0.0
-
-        this.requestDeliverDate = attribute!!["idcrm_requesteddeliverydate"]?.let {
-            it.associatedValue as Date
-        }
+        this.totalItemAmount = attribute!!["idcrm_totalitemamount"]?.let { it.associatedValue as Double } ?: 0.0
+        this.totalAmount = attribute!!["idcrm_totalamount"]?.let { it.associatedValue as Double } ?: 0.0
+        this.totalTax = attribute!!["idcrm_totaltax"]?.let { it.associatedValue as Double } ?: 0.0
+        this.totalDiscount = attribute!!["idcrm_totaldiscount"]?.let { it.associatedValue as Double } ?: 0.0
+        this.requestDeliverDate = attribute!!["idcrm_requesteddeliverydate"]?.associatedValue as? Date
     }
 
     open fun addExistCartItems(cartItems: ArrayList<CartItem>) {

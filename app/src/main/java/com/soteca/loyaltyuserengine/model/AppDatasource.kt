@@ -24,7 +24,7 @@ interface AppDatasource {
 
 }
 
-private class AppDatasourceImp(val context: Context) : AppDatasource {
+class AppDatasourceImp(val context: Context) : AppDatasource {
 
     override fun <T : BaseItem> get(type: T, reference: EntityReference, handler: (T?, Errors?) -> Unit) {
         val primaryId = DefaultEntity(reference.logicalName!!).primaryIdAttribute
@@ -52,7 +52,7 @@ private class AppDatasourceImp(val context: Context) : AppDatasource {
 
             var data: ArrayList<T> = ArrayList()
 
-            entityCollection!!.entityList!!.forEach {
+            entityCollection!!.entityList?.forEach {
                 data.add(type.initContructor(it.attribute!!) as T)
             }
 
@@ -135,9 +135,21 @@ open class BaseItem() {
 
 class Datasource {
 
+    enum class StateCode(val value: String) {
+        ACTIVE("0"),
+        INACTIVE("1");
+    }
+
+    enum class StatusReason(val value: String) {
+        OPEN("527210000"),
+        COMPLETE("527210001"),
+        CANCEL("527210002");
+    }
+
     companion object {
+
         var productsGlobal: ArrayList<Product> = ArrayList()
-        
+
         private var _shared: Datasource? = null
         fun newInstance(context: Context): Datasource {
             if (_shared == null) {
@@ -155,7 +167,10 @@ class Datasource {
 
     fun getCategaries(handler: (ArrayList<Category>?, Errors?) -> Unit) {
 
-        val attributes = arrayListOf("idcrm_poscategoryid", "idcrm_name")
+        val attributes = arrayListOf(
+                "idcrm_poscategoryid",
+                "idcrm_name"
+        )
         val expression = FetchExpression.fetct(entityType = "idcrm_poscategory", attributes = attributes, filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
 
         appData.getMultiple(Category(), expression) { categories: ArrayList<Category>?, errors: Errors? ->
@@ -172,7 +187,10 @@ class Datasource {
 
     fun getCategariesComplete(handler: (ArrayList<Category>?, Errors?) -> Unit) {
 
-        val attributes = arrayListOf("idcrm_poscategoryid", "idcrm_name")
+        val attributes = arrayListOf(
+                "idcrm_poscategoryid",
+                "idcrm_name"
+        )
         val expression = FetchExpression.fetct(entityType = "idcrm_poscategory", attributes = attributes, filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
 
 
@@ -210,6 +228,7 @@ class Datasource {
     }
 
     fun getProducts(handler: (ArrayList<Product>?, Errors?) -> Unit) {
+
         val defaultEntity = DefaultEntity("idcrm_posproduct")
 
         val attributes = arrayListOf(
@@ -226,7 +245,7 @@ class Datasource {
                 FetchExpression.Attributee("idcrm_isauxiliary")
         )
 
-        val attributesImage = arrayListOf(
+        val attributesAnnotation = arrayListOf(
                 FetchExpression.Attributee("annotationid"),
                 FetchExpression.Attributee("filename"),
                 FetchExpression.Attributee("objectid"),
@@ -237,7 +256,7 @@ class Datasource {
         val alias = "productImage"
 
         val imageCondition = FetchExpression.Condition(attribute = "subject", operator = FetchExpression.Operator.like, value = "%${ImageScaleType.SMALL.subjectName()}%")
-        val linkEntity = FetchExpression.LinkEntity(name = "annotation", from = "objectid", to = defaultEntity.primaryIdAttribute, alias = alias, attributes = attributesImage, filter = FetchExpression.Filter.singleCondition(imageCondition))
+        val linkEntity = FetchExpression.LinkEntity(name = "annotation", from = "objectid", to = defaultEntity.primaryIdAttribute, alias = alias, attributes = attributesAnnotation, filter = FetchExpression.Filter.singleCondition(imageCondition))
         val entity = FetchExpression.Entity(name = defaultEntity.logicalName, attributes = attributes, linkEntities = arrayListOf(linkEntity), filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = "0")))
 
         val expression = FetchExpression(entity = entity)
@@ -260,7 +279,13 @@ class Datasource {
     }
 
     fun getComponents(handler: (ArrayList<Component>?, Errors?) -> Unit) {
-        val attributes = arrayListOf("idcrm_poscomponentid", "idcrm_name", "idcrm_product", "idcrm_applyto")
+
+        val attributes = arrayListOf(
+                "idcrm_poscomponentid",
+                "idcrm_name",
+                "idcrm_product",
+                "idcrm_applyto"
+        )
         val expression = FetchExpression.fetct(entityType = "idcrm_poscomponent", attributes = attributes, filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
 
         appData.getMultiple(Component(), expression, { components: ArrayList<Component>?, errors: Errors? ->
@@ -312,8 +337,75 @@ class Datasource {
 
             handler(isDelete, null)
         })
-
     }
+
+    // Wait to add condition for specific customer
+    fun getLatestOrder(handler: (HistoryOrder?, Errors?) -> Unit) {
+
+        val attributesOrder = arrayListOf(
+                FetchExpression.Attributee("idcrm_posorderid"),
+                FetchExpression.Attributee("idcrm_venue"),
+                FetchExpression.Attributee("idcrm_name"),
+                FetchExpression.Attributee("idcrm_totalitemamount"),
+                FetchExpression.Attributee("idcrm_totalamount"),
+                FetchExpression.Attributee("idcrm_totaltax"),
+                FetchExpression.Attributee("idcrm_totaldiscount"),
+                FetchExpression.Attributee("idcrm_requesteddeliverydate"),
+                FetchExpression.Attributee("modifiedon")
+        )
+
+        val stateCodeCondition = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.value)
+        val statusReasonCondition = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.COMPLETE.value)
+        val conditions = arrayListOf(stateCodeCondition, statusReasonCondition)
+        val filters = FetchExpression.Filter.andConditions(conditions)
+        val orders = arrayListOf(FetchExpression.Order(attribute = "modifiedon", descending = true))
+
+        val entity = FetchExpression.Entity(name = "idcrm_posorder", attributes = attributesOrder, filter = filters, orders = orders)
+        val expression = FetchExpression(entity = entity, top = 1)
+
+        appData.getMultiple(HistoryOrder(), expression) { historyOrders: ArrayList<HistoryOrder>?, errors: Errors? ->
+
+            if (errors != null) {
+                handler(null, errors)
+                return@getMultiple
+            }
+            val historyOrder: HistoryOrder = historyOrders!!.single()
+
+            getOrderLine(historyOrder.id) { cartItems: ArrayList<CartItem>?, errors: Errors? ->
+                historyOrder.addExistCartItems(cartItems!!)
+                handler(historyOrder, errors)
+            }
+        }
+    }
+
+    fun getOrderLine(id: String, handler: (ArrayList<CartItem>?, Errors?) -> Unit) {
+
+        val attributesCart = arrayListOf(
+                "idcrm_posorderlineid",
+                "idcrm_productid",
+                "idcrm_quantity",
+                "idcrm_lineitemnumber",
+                "idcrm_name",
+                "idcrm_tax",
+                "idcrm_discountamount",
+                "idcrm_priceperunit",
+                "idcrm_priceperunit"
+        )
+
+        val orderCondition = FetchExpression.Condition(attribute = "idcrm_order", operator = FetchExpression.Operator.equal, value = id)
+        val stateCodeCondition = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.value)
+        val expression = FetchExpression.fetct(entityType = "idcrm_posorderline", attributes = attributesCart, filter = FetchExpression.Filter.andConditions(arrayListOf(orderCondition, stateCodeCondition)))
+
+        appData.getMultiple(CartItem(), expression) { cartItems: ArrayList<CartItem>?, errors: Errors? ->
+
+            if (errors != null) {
+                handler(null, errors)
+                return@getMultiple
+            }
+            handler(cartItems, errors)
+        }
+    }
+
 
 //    fun getAnnotation(entityReference: EntityReference?, scaleType: ImageScaleType, handler: (Annotation?, Errors?) -> Unit) {
 //

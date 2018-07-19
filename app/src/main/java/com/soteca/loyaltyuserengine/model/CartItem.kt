@@ -21,20 +21,14 @@ class CartItem : BaseItem {
         this.id = attribute!!["idcrm_posorderlineid"]!!.associatedValue.toString()
 
         val productReferent = attribute!!["idcrm_productid"]!!.associatedValue as EntityReference
-        this.product = Datasource.productsGlobal.filter { it.id == productReferent.id }.single()
+//        this.product = Datasource.productsGlobal.filter { it.id == productReferent.id }.single()
 
         this.quantity = attribute!!["idcrm_quantity"]!!.associatedValue as Double
         this.lineNumber = attribute!!["idcrm_lineitemnumber"]!!.associatedValue as Int
 
-        this.description = attribute!!["idcrm_name"]?.let {
-            it.associatedValue.toString()
-        }
-        this.tax = attribute!!["idcrm_tax"]?.let {
-            it.associatedValue as Double
-        } ?: 0.0
-        this.discountAmount = attribute!!["idcrm_discountamount"]?.let {
-            it.associatedValue as Double
-        } ?: 0.0
+        this.description = attribute!!["idcrm_name"]?.let { it.associatedValue.toString() }
+        this.tax = attribute!!["idcrm_tax"]?.let { it.associatedValue as Double } ?: 0.0
+        this.discountAmount = attribute!!["idcrm_discountamount"]?.let { it.associatedValue as Double } ?: 0.0
         this.pricePerUnit = attribute!!["idcrm_priceperunit"]!!.associatedValue as Double
         this.amount = attribute!!["idcrm_amount"]!!.associatedValue as Double
     }
@@ -46,6 +40,10 @@ class CartItem : BaseItem {
         this.amount = quantity * pricePerUnit
         this.discountAmount = amount * discount
         this.tax = amount * tax //the calculate of tax if discount amount or amount
+    }
+
+    override fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
+        return CartItem(attribute)
     }
 
 }

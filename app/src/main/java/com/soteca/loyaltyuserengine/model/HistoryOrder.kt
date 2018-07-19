@@ -11,7 +11,11 @@ class HistoryOrder : Order {
     constructor()
 
     constructor(attribute: EntityCollection.Attribute) : super(attribute) {
-        orderDate = attribute!!["modifiedon"] as Date
+        orderDate = attribute!!["modifiedon"]?.associatedValue as? Date
+    }
+
+    override fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
+        return HistoryOrder(attribute)
     }
 
 }

@@ -21,9 +21,14 @@ class MainActivity : AppCompatActivity() {
                 "avm-!dT]PD?7{AZg")
         connector.authenticate(con) { u, e ->
 
-            Datasource.newInstance(this@MainActivity).getCategariesComplete { arrayList, errors ->
+            Datasource.newInstance(this@MainActivity).getLatestOrder { historyOrder, errors ->
 
             }
+
+//            Datasource.newInstance(this@MainActivity).getOrderLine("9f2c3d85-448a-e811-81b4-e0071b659ef1", { carts, errors ->
+//
+//
+//            })
 
         }
     }

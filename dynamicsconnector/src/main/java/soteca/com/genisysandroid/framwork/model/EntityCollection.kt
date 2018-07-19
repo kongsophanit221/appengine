@@ -20,16 +20,16 @@ import kotlin.collections.ArrayList
 @Root(name = "value", strict = false)
 data class EntityCollection(
         @field:Element(name = "EntityName")
-        var entityName: String? = null,
+        var entityName: String = "",
 
-        @field:Element(name = "MoreRecords")
+        @field:Element(name = "MoreRecords", required = false)
         var moreRecords: Boolean? = false,
 
-        @field:Element(name = "PagingCookie")
-        var pagingCookie: String? = "",
+        @field:Element(name = "PagingCookie", required = false)
+        var pagingCookie: String? = null,
 
-        @field:Element(name = "TotalRecordCount")
-        var totalRecordCount: Int? = 0,
+        @field:Element(name = "TotalRecordCount", required = false)
+        var totalRecordCount: Int? = null,
 
         @field:Path(value = "Entities")
         @field:Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
