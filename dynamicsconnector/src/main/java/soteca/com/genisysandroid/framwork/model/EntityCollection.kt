@@ -24,7 +24,7 @@ data class EntityCollection(
         @field:Element(name = "MoreRecords")
         var moreRecords: Boolean? = false,
 
-        @field:Element(name = "PagingCookie")
+        @field:Element(name = "PagingCookie", required = false)
         var pagingCookie: String? = "",
 
         @field:Element(name = "TotalRecordCount")

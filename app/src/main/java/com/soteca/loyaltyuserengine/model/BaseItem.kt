@@ -2,13 +2,16 @@ package com.soteca.loyaltyuserengine.model
 
 import android.content.Context
 import android.util.Log
+import org.simpleframework.xml.core.Persister
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
+import soteca.com.genisysandroid.framwork.helper.decodeSpecialCharacter
 import soteca.com.genisysandroid.framwork.model.AttributeMetadata
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
 import soteca.com.genisysandroid.framwork.model.FetchExpression
 import soteca.com.genisysandroid.framwork.model.encoder.body.KeyValuePair
 import soteca.com.genisysandroid.framwork.networking.Errors
+import java.io.ByteArrayOutputStream
 import kotlin.math.exp
 import kotlin.reflect.KClass
 
@@ -148,7 +151,7 @@ class Datasource(val context: Context) : AppDatasource {
     fun getLatestOrder(handler: (HistoryOrder?, Errors?) -> Unit) {
 
         val statecode = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.stateCode)
-        val statusReason = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.OPEN.statusReason)
+        val statusReason = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.COMPLETE.statusReason)
         val conditions = arrayListOf(statecode, statusReason)
         val filters = FetchExpression.Filter.andConditions(conditions)
 
@@ -218,15 +221,27 @@ class Datasource(val context: Context) : AppDatasource {
 
     //getExisting order
     fun getExistedOrders(handler: (CartOrder?, Errors?) -> Unit) {
-        val linkEntity = FetchExpression.LinkEntity(name = "idcrm_posorderline", from = "idcrm_order", to = "idcrm_posorderid", alias = "orderItem")
 
-        val linkentities = FetchExpression.LinkEntity()
+        val linkEntity = FetchExpression.LinkEntity(name = "idcrm_posorderline", from = "idcrm_order", to = "idcrm_posorderid", alias = "orderItem", attributes = null)
+        val linkentities = FetchExpression.LinkEntity.singleJoin(linkEntity)
         val statecode = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.stateCode)
         val statusreason = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.OPEN.statusReason)
         val filter = FetchExpression.Filter.andConditions(arrayListOf(statecode, statusreason))
         val order = FetchExpression.Order(attribute = "modifiedon", alias = null, descending = true)
-        val entity = FetchExpression.Entity(name = "idcrm_posorder", linkEntities = arrayListOf(linkentities), filter = filter, orders = arrayListOf(order))
+        val entity = FetchExpression.Entity(name = "idcrm_posorder", linkEntities = linkentities, filter = filter, orders = arrayListOf(order))
         val expression = FetchExpression(entity = entity)
+        val TAG = "tBaseItem"
+        DynamicsConnector.default(context).retrieveMultiple(fetchExpression = expression) { entityCollection, errors ->
+            if (errors != null) {
+                handler(null, errors)
+                return@retrieveMultiple
+            }
+            Log.d(TAG, "EntityCollection: $entityCollection")
+            /*val carts = entityCollection!!.entityList!!.map { eachEntity ->
+                Log.d(TAG, "EachEntity: $eachEntity")
+            }*/
+
+        }
     }
 
     //Add Product/Package to Cart

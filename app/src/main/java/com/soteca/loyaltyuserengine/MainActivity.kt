@@ -27,21 +27,12 @@ class MainActivity : AppCompatActivity() {
 //                }
 //            })
 
+            Datasource.newInstance(this).getExistedOrders { cartOrder, errors ->
+
+            }
+
             /*Datasource.newInstance(this).getLatestOrder { historyOrder, errors ->
-                Log.d("tMainActivity", "$historyOrder")
-            }*/
-
-            /*Datasource.newInstance(this).getOrderLine { cartItems, errors ->
-
-                cartItems!!.forEach {
-                    Log.d("tMainActivity", "$it")
-                }
-            }*/
-
-            /*Datasource.newInstance(this).getOrders { orders, errors ->
-                orders!!.forEach {
-                    Log.d("tMainActivity", "$it")
-                }
+                Log.d("tMainActivity", "$historyOrder -> $errors")
             }*/
 
             /*Datasource.newInstance(this@MainActivity).getCategaries({ categories, error ->

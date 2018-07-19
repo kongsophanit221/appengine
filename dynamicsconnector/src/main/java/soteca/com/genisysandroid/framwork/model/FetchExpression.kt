@@ -150,7 +150,64 @@ class FetchExpression(
     }
 
     @Root(strict = false)
-    class LinkEntity(
+    class LinkEntity(name: String, from: String, to: String, alias: String? = null, linkType: LinkType? = null, visible: Boolean? = false,
+                     intersect: Boolean? = false, val attributes: ArrayList<Attributee>? = null, order: Order? = null, filter: Filter? = null,
+                     linkEntities: ArrayList<LinkEntity>? = null) {
+        @field:Attribute(name = "name", required = false)
+        private var _name: String? = name
+
+        @field:Attribute(name = "from", required = false)
+        private var _from: String? = from
+
+        @field:Attribute(name = "to", required = false)
+        private var _to: String? = to
+
+        @field:Attribute(name = "alias", required = false)
+        private var _alias: String? = alias
+
+        @field:Attribute(name = "link-type", required = false)
+        private var linkTypeValue: String? = linkType?.let { it.value }
+
+        @field:ElementList(entry = "attribute", inline = true, required = false)
+        private var _attributes: ArrayList<Attributee>? = attributes
+
+        @field:Attribute(name = "visible", required = false)
+        private var _visible: Boolean? = visible
+
+        @field:Attribute(name = "intersect", required = false)
+        var _intersect: Boolean? = intersect
+
+        @field:Element(name = "order", required = false)
+        var _order: Order? = order
+
+        @field:Element(name = "filter", required = false)
+        var _filter: Filter? = filter
+
+        @field:ElementList(entry = "link-entity", inline = true, required = false)
+        var _linkEntities: ArrayList<LinkEntity>? = linkEntities
+
+        var allAttributes: String? = null //= attributes.let { null } ?: "dasda"
+            @Element(name = "all-attributes", required = false)
+            get() {
+                if (attributes == null || attributes!!.size <= 0) {
+                    return ""
+                }
+                return null
+            }
+
+        companion object {
+
+            fun singleJoin(linkEntity: FetchExpression.LinkEntity): ArrayList<LinkEntity> {
+                return arrayListOf(linkEntity)
+            }
+
+            fun multipleJoin(linkEntities: ArrayList<LinkEntity>): ArrayList<LinkEntity> {
+                return linkEntities
+            }
+        }
+
+    }
+/*class LinkEntity(
             @field:Attribute(name = "name", required = false)
             var name: String? = "",
 
@@ -185,7 +242,7 @@ class FetchExpression(
     ) {
         @field:Attribute(name = "link-type", required = false)
         private var linkTypeValue: String? = linkType?.let { it.value }
-    }
+    }*/
 
     @Root(strict = false)
     enum class LinkType(val value: String) {
