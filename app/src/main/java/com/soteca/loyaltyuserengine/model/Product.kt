@@ -9,7 +9,7 @@ open class Product : BaseItem {
     open var id: String = ""
     open var name: String = ""
     open var price: Double = 0.0
-    open var image: String = ""
+    open var image: Annotation? = null
     open var category: EntityReference? = null
     open var venue: EntityReference? = null
     open var min: Double? = null
@@ -25,7 +25,6 @@ open class Product : BaseItem {
         this.id = attribute!!["idcrm_posproductid"]!!.associatedValue.toString()
         this.name = attribute!!["idcrm_name"]!!.associatedValue.toString()
         this.price = attribute!!["idcrm_pricesell"]!!.associatedValue as Double
-        this.image = ""
         this.category = attribute!!["idcrm_category"]!!.associatedValue as EntityReference
         this.venue = attribute!!["idcrm_venue"]!!.associatedValue as EntityReference
 
@@ -62,5 +61,4 @@ open class Product : BaseItem {
             return AuxiliaryProduct(attribute!!)
         }
     }
-
 }

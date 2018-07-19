@@ -1,6 +1,7 @@
 package soteca.com.genisysandroid.framwork.model
 
 import org.simpleframework.xml.*
+import org.simpleframework.xml.convert.AnnotationStrategy
 import org.simpleframework.xml.convert.Convert
 import org.simpleframework.xml.convert.Converter
 import org.simpleframework.xml.core.Persister
@@ -107,6 +108,7 @@ data class EntityCollection(
             @field:Element(name = "value", required = false)
             @field:Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic")
             private var valueType: Value? = null) {
+
         val value: ValueType?
             get() = valueType!!.value
 
@@ -116,7 +118,8 @@ data class EntityCollection(
     }
 
     @Convert(value = ValueConverter::class)
-    @Root(name = "value", strict = false)
+//    @Root(name = "value", strict = false)
+    @Root(strict = false)
     data class Value(
             var value: ValueType? = null
     )
@@ -172,7 +175,7 @@ data class EntityCollection(
         MONEY("b:Money"),
         ENTITY_REFERENCE("b:EntityReference"),
         ENTITY_COLLECTION("b:EntityCollection"),
-        ALIASED_VALUE("AliasedValue"),
+        ALIASED_VALUE("b:AliasedValue"),
         DATA("base64Binary");
 
         companion object {
@@ -327,7 +330,7 @@ data class EntityCollection(
                     value.value = EntityCollection.ValueType.entityCollection(entityCollection)
                 }
                 Type.ALIASED_VALUE -> {
-                    val serializer = Persister()
+                    val serializer = Persister(AnnotationStrategy())
                     val aliasedType = serializer.read(AliasedType::class.java, node)
                     value.value = EntityCollection.ValueType.aliasedValue(aliasedType)
                 }
@@ -342,6 +345,7 @@ data class EntityCollection(
 }
 
 @Root(strict = false)
+@Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
 data class AliasedType(
         @field:Element(name = "AttributeLogicalName", required = false)
         var attributeLogicalName: String? = null,
@@ -350,9 +354,16 @@ data class AliasedType(
         var entityLogicalName: String? = null,
 
         @field:Element(name = "Value", required = false)
-        var value: EntityCollection.ValueType? = null
-)
+        private var valueType: EntityCollection.Value? = null
+) {
 
+    val value: EntityCollection.ValueType
+        get() = valueType!!.value!!
+
+    override fun toString(): String {
+        return attributeLogicalName + " " + entityLogicalName + " " + value
+    }
+}
 
 @Root(strict = false)
 data class EntityReference(
