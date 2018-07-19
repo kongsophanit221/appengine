@@ -220,19 +220,24 @@ class Datasource(val context: Context) : AppDatasource {
     }
 
     //getExisting order
-    fun getExistedOrders(orderId: String, handler: (ArrayList<CartItem>?, Errors?) -> Unit) {
+    fun getExistedOrders(id: String, handler: (CartOrder?, Errors?) -> Unit) {
 
-        val order = FetchExpression.Condition(attribute = "idcrm_order", operator = FetchExpression.Operator.equal, value = orderId)
+        val orderId = FetchExpression.Condition(attribute = "idcrm_posorderid", operator = FetchExpression.Operator.equal, value = id)
         val stateCode = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.stateCode)
         val statusReason = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.COMPLETE.statusReason)
-        val expression = FetchExpression.fetct(entityType = "idcrm_posorderline", filter = FetchExpression.Filter.andConditions(arrayListOf(order, stateCode, statusReason)))
-
-        getMultiple(CartItem(), expression) { cartItems: ArrayList<CartItem>?, errors: Errors? ->
+        val expression = FetchExpression.fetct(entityType = "idcrm_posorder", filter = FetchExpression.Filter.andConditions(arrayListOf(orderId, stateCode, statusReason)))
+        
+        getMultiple(CartOrder(), expression) { cartOrders: ArrayList<CartOrder>?, errors: Errors? ->
             if (errors != null) {
                 handler(null, errors)
                 return@getMultiple
             }
-            handler(cartItems, errors)
+
+            val cartOrder: CartOrder = cartOrders!!.single()
+            getOrderLine(cartOrder.id) { items: ArrayList<CartItem>?, errors: Errors? ->
+                items!!.forEach { cartOrder.addCart(it) }
+                handler(cartOrder, errors)
+            }
         }
     }
 

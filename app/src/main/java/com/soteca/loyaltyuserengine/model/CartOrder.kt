@@ -39,6 +39,10 @@ class CartOrder : Order {
     override var totalAmount: Double = 0.0
         get() = totalItemAmount - totalDiscount + totalTax
 
+    override fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
+        return CartOrder(attribute)
+    }
+
     fun clear() {
         id = ""
         totalTax = 0.0
@@ -51,11 +55,12 @@ class CartOrder : Order {
         orderItems = ArrayList()
     }
 
-    fun addCart(cartItem: CartItem) {
+    open fun addCart(cartItem: CartItem) {
         orderItems.add(cartItem)
     }
 
-    fun removeCart(cartItem: CartItem) {
+    open fun removeCart(cartItem: CartItem) {
         orderItems.remove(cartItem)
     }
+
 }
