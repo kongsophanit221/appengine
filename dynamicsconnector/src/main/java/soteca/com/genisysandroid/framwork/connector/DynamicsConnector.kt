@@ -449,7 +449,8 @@ class DynamicsConnector {
                 return@RequestTask
             }
 
-            done(!(responseDecoder!!.text!!.contains("<DeleteResponse")), null)
+            done(responseDecoder!!.text!!.contains("<DeleteResponse"), null)
+
         }).execute()
     }
 

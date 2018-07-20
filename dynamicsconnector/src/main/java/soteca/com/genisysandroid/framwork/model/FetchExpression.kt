@@ -153,6 +153,7 @@ class FetchExpression(
     class LinkEntity(name: String, from: String, to: String, alias: String? = null, linkType: LinkType? = null, visible: Boolean? = false,
                      intersect: Boolean? = false, val attributes: ArrayList<Attributee>? = null, order: Order? = null, filter: Filter? = null,
                      linkEntities: ArrayList<LinkEntity>? = null) {
+
         @field:Attribute(name = "name", required = false)
         private var _name: String? = name
 
@@ -205,44 +206,7 @@ class FetchExpression(
                 return linkEntities
             }
         }
-
     }
-/*class LinkEntity(
-            @field:Attribute(name = "name", required = false)
-            var name: String? = "",
-
-            @field:Attribute(name = "from", required = false)
-            var from: String? = "",
-
-            @field:Attribute(name = "to", required = false)
-            var to: String? = "",
-
-            @field:Attribute(name = "alias", required = false)
-            var alias: String? = null,
-
-            var linkType: LinkType? = null,
-
-            @field:Attribute(name = "visible", required = false)
-            var visible: Boolean? = false,
-
-            @field:Attribute(name = "intersect", required = false)
-            var intersect: Boolean? = false,
-
-            @field:ElementList(entry = "attribute", inline = true, required = false)
-            var attributes: ArrayList<Attributee>? = null,
-
-            @field:Element(name = "order", required = false)
-            var order: Order? = null,
-
-            @field:Element(name = "filter", required = false)
-            var filter: Filter? = null,
-
-            @field:ElementList(entry = "link-entity", inline = true, required = false)
-            var linkEntities: ArrayList<LinkEntity>? = null
-    ) {
-        @field:Attribute(name = "link-type", required = false)
-        private var linkTypeValue: String? = linkType?.let { it.value }
-    }*/
 
     @Root(strict = false)
     enum class LinkType(val value: String) {
@@ -292,35 +256,63 @@ class FetchExpression(
     }
 
     @Root(strict = false)
-    class Condition(
-            @field:Attribute(name = "attribute", required = false)
-            var attribute: String? = null,
+    class Condition() {
 
-            var `operator`: Operator? = null,
-
-            @field:Attribute(name = "value", required = false)
-            var value: String? = null,
-
-            @field:ElementList(entry = "value", inline = true, required = false)
-            var values: ArrayList<Values>? = null,
-
-            @field:Attribute(name = "entityname", required = false)
-            var entityName: String? = null,
-
-            @field:Attribute(name = "column", required = false)
-            var column: String? = null,
-
-            @field:Attribute(name = "alias", required = false)
-            var alias: String? = null,
-
-            var aggregate: AggregateType? = null
-    ) {
+        @field:Attribute(name = "attribute", required = false)
+        private var attribute: String? = null
 
         @field:Attribute(name = "operator", required = false)
-        private var operatorValue: String? = `operator`?.let { it.value }
+        private var operator: String? = null
+
+        @field:ElementList(entry = "value", inline = true, required = false)
+        var values: ArrayList<Values>? = null
+
+        @field:Attribute(name = "entityname", required = false)
+        private var entityName: String? = null
+
+        @field:Attribute(name = "column", required = false)
+        private var column: String? = null
+
+        @field:Attribute(name = "alias", required = false)
+        private var alias: String? = null
 
         @field:Attribute(name = "aggregate", required = false)
-        private var aggregateValue: String? = aggregate?.let { it.value }
+        private var aggregate: String? = null
+
+        constructor(attribute: String? = null, `operator`: Operator? = null, value: String? = null, values: List<String>? = null) : this() {
+            this.attribute = attribute
+            this.operator = `operator`?.let { it.value }
+
+            values?.let {
+                this.values = ArrayList()
+                this.values!!.addAll(it.map { Values(it) })
+            }
+
+            value?.let {
+                this.values?.let { it.add(Values(value)) }
+                        ?: run { this.values = arrayListOf(Values(value)) }
+            }
+        }
+
+        constructor(attribute: String? = null, `operator`: Operator? = null, value: Values? = null, values: ArrayList<Values>? = null,
+                    entityName: String? = null, column: String? = null, alias: String? = null, aggregate: AggregateType? = null) : this() {
+            this.attribute = attribute
+            this.operator = `operator`?.let { it.value }
+            this.entityName = entityName
+            this.column = column
+            this.alias = alias
+            this.aggregate = aggregate?.let { it.value }
+
+            values?.let {
+                this.values = ArrayList()
+                this.values!!.addAll(it)
+            }
+
+            value?.let {
+                this.values?.let { it.add(value) }
+                        ?: run { this.values = arrayListOf(value) }
+            }
+        }
     }
 
     @Root(strict = false)
@@ -364,7 +356,7 @@ class FetchExpression(
         }
     }
 
-    @Root(strict = false)
+    @Root(name = "value", strict = false)
     class Values(
             @field:Text
             var value: String = "",
