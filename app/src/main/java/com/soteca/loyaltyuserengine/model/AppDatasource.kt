@@ -342,7 +342,7 @@ class Datasource {
         )
 
         val stateCodeCondition = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.value)
-        val statusReasonCondition = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.OPEN.value)
+        val statusReasonCondition = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.COMPLETE.value)
         val conditions = arrayListOf(stateCodeCondition, statusReasonCondition)
         val filters = FetchExpression.Filter.andConditions(conditions)
         val orders = arrayListOf(FetchExpression.Order(attribute = "modifiedon", descending = true))
@@ -356,11 +356,17 @@ class Datasource {
                 handler(null, errors)
                 return@getMultiple
             }
-            val historyOrder: HistoryOrder = historyOrders!!.single()
+            val historyOrder: HistoryOrder? = historyOrders?.let { it.single() }
 
-            getOrderLine(historyOrder.id) { cartItems: ArrayList<CartItem>?, errors: Errors? ->
-                historyOrder.addExistCartItems(cartItems!!)
-                handler(historyOrder, errors)
+            historyOrder?.let {
+
+                getOrderLine(it.id) { cartItems: ArrayList<CartItem>?, errors: Errors? ->
+                    
+                    it.addExistCartItems(cartItems!!)
+                    handler(it, errors)
+                }
+            } ?: run {
+                handler(null, null)
             }
         }
     }
@@ -408,10 +414,11 @@ class Datasource {
 
     fun cancelOrder(orderId: String, handler: (Boolean?, Errors?) -> Unit) {
 
-        val stateReasonCondition = EntityCollection.KeyValuePairOfstringanyType(key = "statuscode", valueType = EntityCollection.Value(EntityCollection.ValueType.optionSetValue(value = StatusReason.CANCEL.value)))
-        val entity = EntityCollection.Entity(id = orderId, logicalName = "idcrm_posorder", attribute = EntityCollection.Attribute(keyValuePairList = arrayListOf(stateReasonCondition)))
+        val keyValuePairStatusCode = EntityCollection.KeyValuePairOfstringanyType(key = "statuscode", valueType = EntityCollection.Value(EntityCollection.ValueType.optionSetValue(value = StatusReason.CANCEL.value)))
+        val entity = EntityCollection.Entity(id = orderId, logicalName = "idcrm_posorder", attribute = EntityCollection.Attribute(keyValuePairList = arrayListOf(keyValuePairStatusCode)))
 
         appData.update(entity) { status, errors ->
+
             if (errors != null) {
                 handler(null, errors)
                 return@update

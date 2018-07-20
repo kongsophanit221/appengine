@@ -1,5 +1,6 @@
 package soteca.com.genisysandroid.framwork.model
 
+import android.util.Log
 import org.simpleframework.xml.*
 import org.simpleframework.xml.convert.AnnotationStrategy
 import org.simpleframework.xml.convert.Convert
@@ -67,7 +68,7 @@ data class EntityCollection(
 
     @Root(name = "Attributes", strict = false)
     @NamespaceList(
-            Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic"),
+            Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic", prefix = "c"),
             Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
     )
     class Attribute(
@@ -102,11 +103,11 @@ data class EntityCollection(
     @Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
     data class KeyValuePairOfstringanyType(
             @field:Element(name = "key", required = false)
-            @field:Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic")
+            @field:Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic", prefix = "c")
             var key: String? = null,
 
             @field:Element(name = "value", required = false)
-            @field:Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic")
+            @field:Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic", prefix = "c")
             private var valueType: Value? = null) {
 
         val value: ValueType?
@@ -118,7 +119,6 @@ data class EntityCollection(
     }
 
     @Convert(value = ValueConverter::class)
-//    @Root(name = "value", strict = false)
     @Root(strict = false)
     data class Value(
             var value: ValueType? = null
@@ -199,7 +199,8 @@ data class EntityCollection(
 
                         node!!.setAttribute("i:type", Type.OPTION_SET_VALUE.value)
                         val nodeContainer = node.getChild("Value")
-                        nodeContainer.namespaces.setReference("http://schemas.microsoft.com/xrm/2011/Contracts")
+                        nodeContainer.namespaces.setReference("http://schemas.microsoft.com/xrm/2011/Contracts", "b")
+                        nodeContainer.reference = "http://schemas.microsoft.com/xrm/2011/Contracts"
                         nodeContainer.value = (it.value as ValueType.optionSetValue).value
                     }
 

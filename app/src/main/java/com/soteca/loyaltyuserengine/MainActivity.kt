@@ -27,7 +27,12 @@ class MainActivity : AppCompatActivity() {
 
                 val order: HistoryOrder = historyOrder!!
 
-//                Datasource.newInstance(this@MainActivity).ca
+                Datasource.newInstance(this@MainActivity).cancelOrder(order.id, { status, errors ->
+
+                    if (status!!) {
+                        Log.d("tMain", "successFul")
+                    }
+                })
 
             }
 
