@@ -256,35 +256,81 @@ class FetchExpression(
     }
 
     @Root(strict = false)
-    class Condition(
-            @field:Attribute(name = "attribute", required = false)
-            var attribute: String? = null,
+    class Condition() {
 
-            var `operator`: Operator? = null,
-
-            @field:Attribute(name = "value", required = false)
-            var value: String? = null,
-
-            @field:ElementList(entry = "value", inline = true, required = false)
-            var values: List<Values>? = null,
-
-            @field:Attribute(name = "entityname", required = false)
-            var entityName: String? = null,
-
-            @field:Attribute(name = "column", required = false)
-            var column: String? = null,
-
-            @field:Attribute(name = "alias", required = false)
-            var alias: String? = null,
-
-            var aggregate: AggregateType? = null
-    ) {
+        @field:Attribute(name = "attribute", required = false)
+        private var attribute: String? = null
 
         @field:Attribute(name = "operator", required = false)
-        private var operatorValue: String? = `operator`?.let { it.value }
+        private var operator: String? = null
+
+        @field:ElementList(entry = "value", inline = true, required = false)
+        var values: ArrayList<Value>? = null
+
+        @field:Attribute(name = "entityname", required = false)
+        private var entityName: String? = null
+
+        @field:Attribute(name = "column", required = false)
+        private var column: String? = null
+
+        @field:Attribute(name = "alias", required = false)
+        private var alias: String? = null
 
         @field:Attribute(name = "aggregate", required = false)
-        private var aggregateValue: String? = aggregate?.let { it.value }
+        private var aggregate: String? = null
+
+        @field:Attribute(name = "value", required = false)
+        private var valueAttr: String? = null
+
+        @field:Attribute(name = "uiName", required = false)
+        private var uiNameAttr: String? = null
+
+        @field:Attribute(name = "uitype", required = false)
+        private var uiTypeAttr: String? = null
+
+        constructor(attribute: String? = null, `operator`: Operator? = null, value: String? = null, values: List<String>? = null) : this() {
+            this.attribute = attribute
+            this.operator = `operator`?.let { it.value }
+
+            values?.let {
+                this.values = ArrayList()
+                this.values!!.addAll(it.map { Value(it) })
+            }
+
+            value?.let {
+                this.valueAttr = value
+            }
+        }
+
+        constructor(attribute: String? = null, `operator`: Operator? = null, value: Value? = null, values: ArrayList<Value>? = null,
+                    entityName: String? = null, column: String? = null, alias: String? = null, aggregate: AggregateType? = null) : this() {
+            this.attribute = attribute
+            this.operator = `operator`?.let { it.value }
+            this.entityName = entityName
+            this.column = column
+            this.alias = alias
+            this.aggregate = aggregate?.let { it.value }
+            this.values = values
+
+            value?.let {
+                this.valueAttr = value.value
+                this.uiNameAttr = value.uiName
+                this.uiTypeAttr = value.uiType
+            }
+        }
+
+        @Root(name = "value", strict = false)
+        class Value(
+                @field:Text
+                var value: String = "",
+
+                @field:Attribute(name = "uiname", required = false)
+                var uiName: String? = null,
+
+                @field:Attribute(name = "uitype", required = false)
+                var uiType: String? = null
+        )
+
     }
 
     @Root(strict = false)
@@ -327,18 +373,6 @@ class FetchExpression(
             return value
         }
     }
-
-    @Root(strict = false)
-    class Values(
-            @field:Text
-            var value: String = "",
-
-            @field:Attribute(name = "uiname", required = false)
-            var uiName: String? = null,
-
-            @field:Attribute(name = "uitype", required = false)
-            var uiType: String? = null
-    )
 
     @Root(strict = false)
     class Order(
