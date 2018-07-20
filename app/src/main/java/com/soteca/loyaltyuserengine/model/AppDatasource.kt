@@ -406,11 +406,19 @@ class Datasource {
         })
     }
 
-    fun cancelOrder(entity: EntityCollection.Entity) {
+    fun cancelOrder(orderId: String, handler: (Boolean?, Errors?) -> Unit) {
 
-        appData.update(entity, { status, errors ->
+        val stateReasonCondition = EntityCollection.KeyValuePairOfstringanyType(key = "statuscode", valueType = EntityCollection.Value(EntityCollection.ValueType.optionSetValue(value = StatusReason.CANCEL.value)))
+        val entity = EntityCollection.Entity(id = orderId, logicalName = "idcrm_posorder", attribute = EntityCollection.Attribute(keyValuePairList = arrayListOf(stateReasonCondition)))
 
-        })
+        appData.update(entity) { status, errors ->
+            if (errors != null) {
+                handler(null, errors)
+                return@update
+            }
+
+            handler(status, null)
+        }
     }
 
 
