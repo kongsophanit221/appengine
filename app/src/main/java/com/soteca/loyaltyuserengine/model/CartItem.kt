@@ -21,7 +21,7 @@ class CartItem : BaseItem {
         this.id = attribute!!["idcrm_posorderlineid"]!!.associatedValue.toString()
 
         val productReferent = attribute!!["idcrm_productid"]!!.associatedValue as EntityReference
-//        this.product = Datasource.productsGlobal.filter { it.id == productReferent.id }.single()
+        //this.product = Datasource.productsGlobal.find { it.id == productReferent.id }
 
         this.quantity = attribute!!["idcrm_quantity"]!!.associatedValue as Double
         this.lineNumber = attribute!!["idcrm_lineitemnumber"]!!.associatedValue as Int

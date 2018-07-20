@@ -326,19 +326,6 @@ class Datasource {
         }
     }
 
-    fun deleteCartItem(id: String, handler: (Boolean?, Errors?) -> Unit) {
-
-        appData.delete("idcrm_posorderline", id, { isDelete, errors ->
-
-            if (errors != null) {
-                handler(null, errors)
-                return@delete
-            }
-
-            handler(isDelete, null)
-        })
-    }
-
     // Wait to add condition for specific customer
     fun getLatestOrder(handler: (HistoryOrder?, Errors?) -> Unit) {
 
@@ -355,7 +342,7 @@ class Datasource {
         )
 
         val stateCodeCondition = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.value)
-        val statusReasonCondition = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.COMPLETE.value)
+        val statusReasonCondition = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.OPEN.value)
         val conditions = arrayListOf(stateCodeCondition, statusReasonCondition)
         val filters = FetchExpression.Filter.andConditions(conditions)
         val orders = arrayListOf(FetchExpression.Order(attribute = "modifiedon", descending = true))
@@ -389,7 +376,7 @@ class Datasource {
                 "idcrm_tax",
                 "idcrm_discountamount",
                 "idcrm_priceperunit",
-                "idcrm_priceperunit"
+                "idcrm_amount"
         )
 
         val orderCondition = FetchExpression.Condition(attribute = "idcrm_order", operator = FetchExpression.Operator.equal, value = id)
@@ -404,6 +391,26 @@ class Datasource {
             }
             handler(cartItems, errors)
         }
+    }
+
+    fun deleteCartItem(id: String, handler: (Boolean?, Errors?) -> Unit) {
+
+        appData.delete("idcrm_posorderline", id, { status, errors ->
+
+            if (errors != null) {
+                handler(null, errors)
+                return@delete
+            }
+
+            handler(status, null)
+        })
+    }
+
+    fun cancelOrder(entity: EntityCollection.Entity) {
+
+        appData.update(entity, { status, errors ->
+
+        })
     }
 
 
