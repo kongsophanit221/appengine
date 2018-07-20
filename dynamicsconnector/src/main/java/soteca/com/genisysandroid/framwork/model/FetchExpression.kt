@@ -265,7 +265,7 @@ class FetchExpression(
         private var operator: String? = null
 
         @field:ElementList(entry = "value", inline = true, required = false)
-        var values: ArrayList<Values>? = null
+        var values: ArrayList<Value>? = null
 
         @field:Attribute(name = "entityname", required = false)
         private var entityName: String? = null
@@ -279,22 +279,30 @@ class FetchExpression(
         @field:Attribute(name = "aggregate", required = false)
         private var aggregate: String? = null
 
+        @field:Attribute(name = "value", required = false)
+        private var valueAttr: String? = null
+
+        @field:Attribute(name = "uiName", required = false)
+        private var uiNameAttr: String? = null
+
+        @field:Attribute(name = "uitype", required = false)
+        private var uiTypeAttr: String? = null
+
         constructor(attribute: String? = null, `operator`: Operator? = null, value: String? = null, values: List<String>? = null) : this() {
             this.attribute = attribute
             this.operator = `operator`?.let { it.value }
 
             values?.let {
                 this.values = ArrayList()
-                this.values!!.addAll(it.map { Values(it) })
+                this.values!!.addAll(it.map { Value(it) })
             }
 
             value?.let {
-                this.values?.let { it.add(Values(value)) }
-                        ?: run { this.values = arrayListOf(Values(value)) }
+                this.valueAttr = value
             }
         }
 
-        constructor(attribute: String? = null, `operator`: Operator? = null, value: Values? = null, values: ArrayList<Values>? = null,
+        constructor(attribute: String? = null, `operator`: Operator? = null, value: Value? = null, values: ArrayList<Value>? = null,
                     entityName: String? = null, column: String? = null, alias: String? = null, aggregate: AggregateType? = null) : this() {
             this.attribute = attribute
             this.operator = `operator`?.let { it.value }
@@ -302,17 +310,27 @@ class FetchExpression(
             this.column = column
             this.alias = alias
             this.aggregate = aggregate?.let { it.value }
-
-            values?.let {
-                this.values = ArrayList()
-                this.values!!.addAll(it)
-            }
+            this.values = values
 
             value?.let {
-                this.values?.let { it.add(value) }
-                        ?: run { this.values = arrayListOf(value) }
+                this.valueAttr = value.value
+                this.uiNameAttr = value.uiName
+                this.uiTypeAttr = value.uiType
             }
         }
+
+        @Root(name = "value", strict = false)
+        class Value(
+                @field:Text
+                var value: String = "",
+
+                @field:Attribute(name = "uiname", required = false)
+                var uiName: String? = null,
+
+                @field:Attribute(name = "uitype", required = false)
+                var uiType: String? = null
+        )
+
     }
 
     @Root(strict = false)
@@ -355,18 +373,6 @@ class FetchExpression(
             return value
         }
     }
-
-    @Root(name = "value", strict = false)
-    class Values(
-            @field:Text
-            var value: String = "",
-
-            @field:Attribute(name = "uiname", required = false)
-            var uiName: String? = null,
-
-            @field:Attribute(name = "uitype", required = false)
-            var uiType: String? = null
-    )
 
     @Root(strict = false)
     class Order(
