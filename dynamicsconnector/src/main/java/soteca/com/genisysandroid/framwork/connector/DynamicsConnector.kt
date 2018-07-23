@@ -23,7 +23,6 @@ import soteca.com.genisysandroid.framwork.networking.RequestTask
 class DynamicsConnector {
 
     companion object {
-
         private var shared: DynamicsConnector? = null
 
         fun default(context: Context): DynamicsConnector {
@@ -45,6 +44,7 @@ class DynamicsConnector {
     constructor(context: Context, authenticator: Authenticator) {
         this.context = context
         this.authenticator = authenticator
+        DynamicsConnector.shared = this
     }
 
     private fun preExecutionCheck(): Triple<String, String, String> = runBlocking {

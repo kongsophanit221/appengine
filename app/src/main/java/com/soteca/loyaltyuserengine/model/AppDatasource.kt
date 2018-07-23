@@ -2,7 +2,15 @@ package com.soteca.loyaltyuserengine.model
 
 import android.content.Context
 import android.util.Log
+import com.soteca.loyaltyuserengine.api.WebConfig
+import com.soteca.loyaltyuserengine.networking.AppRequestData
+import com.soteca.loyaltyuserengine.networking.AppRequestTask
+import com.soteca.loyaltyuserengine.networking.AppResponseData
 import com.soteca.loyaltyuserengine.util.ImageScaleType
+import com.soteca.loyaltyuserengine.util.getSafeString
+import com.soteca.loyaltyuserengine.util.initWithJson
+import org.json.JSONObject
+import soteca.com.genisysandroid.framwork.authenticator.DynamicAuthenticator
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
@@ -17,6 +25,8 @@ interface AppDatasource {
     fun <T : BaseItem> getMultiple(type: T, fetchExpression: FetchExpression, handler: (ArrayList<T>?, Errors?) -> Unit)
 
     fun <T : BaseItem> getMultiple(type: T, alias: String, fetchExpression: FetchExpression, handler: (ArrayList<T>?, ArrayList<Annotation>?, Errors?) -> Unit)
+
+    fun create(entity: EntityCollection.Entity, handler: (String?, Errors?) -> Unit)
 
     fun delete(logicalName: String, id: String, handler: (Boolean?, Errors?) -> Unit)
 
@@ -92,6 +102,20 @@ class AppDatasourceImp(val context: Context) : AppDatasource {
         }
     }
 
+    override fun create(entity: EntityCollection.Entity, handler: (String?, Errors?) -> Unit) {
+
+        DynamicsConnector.default(context).create(entity, { id, errors ->
+
+            if (errors != null) {
+                handler(null, errors)
+                return@create
+            }
+
+            handler(id, null)
+
+        })
+    }
+
     override fun delete(logicalName: String, id: String, handler: (Boolean?, Errors?) -> Unit) {
 
         DynamicsConnector.default(context).delete(logicalName, id, { delete, errors ->
@@ -151,7 +175,8 @@ class Datasource {
         var productsGlobal: ArrayList<Product> = ArrayList()
 
         private var _shared: Datasource? = null
-        fun newInstance(context: Context): Datasource {
+
+        fun shared(context: Context): Datasource {
             if (_shared == null) {
                 _shared = Datasource(context)
             }
@@ -160,9 +185,11 @@ class Datasource {
     }
 
     private var appData: AppDatasourceImp
+    private var context: Context
 
     constructor(context: Context) {
         this.appData = AppDatasourceImp(context)
+        this.context = context
     }
 
     fun getCategaries(handler: (ArrayList<Category>?, Errors?) -> Unit) {
@@ -361,7 +388,7 @@ class Datasource {
             historyOrder?.let {
 
                 getOrderLine(it.id) { cartItems: ArrayList<CartItem>?, errors: Errors? ->
-                    
+
                     it.addExistCartItems(cartItems!!)
                     handler(it, errors)
                 }
@@ -426,6 +453,35 @@ class Datasource {
 
             handler(status, null)
         }
+    }
+
+    fun register(param: HashMap<String, String>?, handler: (DynamicAuthenticator.Token?, String?) -> Unit) {
+        val request = AppRequestData(WebConfig.shared().REGISTER_URL, param)
+
+        AppRequestTask(request, { result ->
+
+            if (result.isError()) {
+                handler(null, result.message)
+                return@AppRequestTask
+            }
+
+            handler(DynamicAuthenticator.Token().initWithJson(result.data), null)
+        }).execute()
+    }
+
+    fun login(param: HashMap<String, String>?, handler: (DynamicAuthenticator.Token?, String?) -> Unit) {
+        val request = AppRequestData(WebConfig.shared().LOGIN_URL, param)
+
+        AppRequestTask(request, { result ->
+
+            if (result.isError()) {
+                handler(null, result.message)
+                return@AppRequestTask
+            }
+
+            handler(DynamicAuthenticator.Token().initWithJson(result.data), null)
+
+        }).execute()
     }
 
 

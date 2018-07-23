@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
 //        expression = FetchExpression.fetch(nil, entityType: "idcrm_posproduct", atPage: nil, pagingCookie: nil, select: nil, using: .singleCondition(.init(attribute: "idcrm_posproductid", operator: .equal, value: "test")), orderBy: nil, isDescending: true)
 
-        val values = arrayListOf(FetchExpression.Values("id1"), FetchExpression.Values("id2"), FetchExpression.Values("id3", "uiName Three"), FetchExpression.Values("id4", "uiName 4", "uiType 4"))
+//        val values = arrayListOf(FetchExpression.Values("id1"), FetchExpression.Values("id2"), FetchExpression.Values("id3", "uiName Three"), FetchExpression.Values("id4", "uiName 4", "uiType 4"))
 //        val expression = FetchExpression.fetct(null, "idcrm_posproduct", null, null, null, FetchExpression.Filter.singleCondition(FetchExpression.Condition("idcrm_posproductid", FetchExpression.Operator.`in`, values = values)), null)
 
 //        val expression = FetchExpression(FetchExpression.Entity("account"))
