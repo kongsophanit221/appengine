@@ -221,34 +221,34 @@ class Datasource(val context: Context) : AppDatasource {
     }
 
     //getExisting order
-    fun getExistedOrders(id: String, handler: (CartOrder?, Errors?) -> Unit) {
+    fun getExistedOrders(handler: (CartItem?, Errors?) -> Unit) {
 
-        /*val orderId = FetchExpression.Condition(attribute = "idcrm_posorderid", operator = FetchExpression.Operator.equal, value = id)
-        val stateCode = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.stateCode)
-        val statusReason = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.COMPLETE.statusReason)
-        val expression = FetchExpression.fetct(entityType = "idcrm_posorder", filter = FetchExpression.Filter.andConditions(arrayListOf(orderId, stateCode, statusReason)))
-        
-        getMultiple(CartOrder(), expression) { cartOrders: ArrayList<CartOrder>?, errors: Errors? ->
-            if (errors != null) {
-                handler(null, errors)
-                return@getMultiple
-            }
-
-            val cartOrder: CartOrder = cartOrders!!.single()
-            getOrderLine(cartOrder.id) { items: ArrayList<CartItem>?, errors: Errors? ->
-                items!!.forEach { cartOrder.addCart(it) }
-                handler(cartOrder, errors)
-            }
-        }*/
-
-        val customerCondition = FetchExpression.Condition(attribute = "idcrm_customerid", operator = FetchExpression.Operator.equal, value = FetchExpression.Values(value = "b2d489ac-aa88-e811-8192-e0071b67cb31", uiType = "contact").toString())
+        val customerCondition = FetchExpression.Condition(attribute = "idcrm_customerid", operator = FetchExpression.Operator.equal, value = FetchExpression.Condition.Value(value = "b2d489ac-aa88-e811-8192-e0071b67cb31", uiType = "contact"))
         val orderItemLinkEntity = FetchExpression.LinkEntity(name = "idcrm_posorderline", from = "idcrm_order", to = "idcrm_posorderid", alias = "orderItem", linkType = FetchExpression.LinkType.OUTER)
         val stateCode = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.stateCode)
-        val statusReason = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.COMPLETE.statusReason)
-        val filter = FetchExpression.Filter.andConditions(arrayListOf(stateCode, statusReason))
+        val statusReason = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.OPEN.statusReason)
+        val filter = FetchExpression.Filter.andConditions(arrayListOf(stateCode, statusReason, customerCondition))
         val order = FetchExpression.Order(attribute = "modifiedon", descending = true)
         val entity = FetchExpression.Entity(name = "idcrm_posorder", linkEntities = arrayListOf(orderItemLinkEntity), filter = filter, orders = arrayListOf(order))
         val expression = FetchExpression(entity)
+
+        DynamicsConnector.default(context).retrieveMultiple(expression) { entityCollection, errors ->
+            if (errors != null) {
+                handler(null, errors)
+                return@retrieveMultiple
+            }
+
+            entityCollection!!.entityList!!.forEach {
+                val orderItems = it.attribute!!.keyValuePairList!!.filter { it.key!!.contains("orderItem") }
+                orderItems.forEach {
+                    it.key = it.key!!.replace("orderItem.", "")
+                }
+
+                val modifyItems = ArrayList<EntityCollection.KeyValuePairOfstringanyType>()
+                modifyItems.addAll(orderItems)
+                handler(CartItem(EntityCollection.Attribute(modifyItems)), errors)
+            }
+        }
     }
 
     //Add Product/Package to Cart

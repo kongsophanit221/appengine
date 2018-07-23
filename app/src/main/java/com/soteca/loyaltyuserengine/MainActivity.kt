@@ -27,10 +27,10 @@ class MainActivity : AppCompatActivity() {
 //                }
 //            })
 
-            /*val TAG = "tMainActivity"
-            Datasource.newInstance(this).getExistedOrders("89368b76-7585-e811-8192-e0071b67cb31") { cartOrder, errors ->
-                Log.d(TAG, "$cartOrder")
-            }*/
+//            val TAG = "tMainActivity"
+//            Datasource.newInstance(this).getExistedOrders { cartItem, errors ->
+//                Log.d(TAG, "$cartItem")
+//            }
 
             /*Datasource.newInstance(this).getLatestOrder { historyOrder, errors ->
                 Log.d("tMainActivity", "$historyOrder -> $errors")
