@@ -398,6 +398,65 @@ class Datasource {
         }
     }
 
+    fun getExistedOrders(handler: (CartOrder?, Errors?) -> Unit) {
+
+        val alias = "orderItem"
+
+        val attributesOrder = arrayListOf(
+                FetchExpression.Attributee("idcrm_posorderid"),
+                FetchExpression.Attributee("idcrm_venue"),
+                FetchExpression.Attributee("idcrm_name"),
+                FetchExpression.Attributee("idcrm_totalitemamount"),
+                FetchExpression.Attributee("idcrm_totalamount"),
+                FetchExpression.Attributee("idcrm_totaltax"),
+                FetchExpression.Attributee("idcrm_totaldiscount"),
+                FetchExpression.Attributee("idcrm_requesteddeliverydate"),
+                FetchExpression.Attributee("modifiedon")
+        )
+
+        val customerCondition = FetchExpression.Condition(attribute = "idcrm_customerid", operator = FetchExpression.Operator.equal, value = FetchExpression.Condition.Value(value = "b2d489ac-aa88-e811-8192-e0071b67cb31", uiType = "contact"))
+        val orderItemLinkEntity = FetchExpression.LinkEntity(name = "idcrm_posorderline", from = "idcrm_order", to = "idcrm_posorderid", alias = alias, linkType = FetchExpression.LinkType.OUTER)
+        val stateCodeCondition = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.value)
+        val statusReasonCondition = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.OPEN.value)
+        val filter = FetchExpression.Filter.andConditions(arrayListOf(stateCodeCondition, statusReasonCondition, customerCondition))
+        val order = FetchExpression.Order(attribute = "modifiedon", descending = true)
+        val entity = FetchExpression.Entity(name = "idcrm_posorder", attributes = attributesOrder, linkEntities = arrayListOf(orderItemLinkEntity), filter = filter, orders = arrayListOf(order))
+        val expression = FetchExpression(entity)
+
+        DynamicsConnector.default(context).retrieveMultiple(expression) { entityCollection, errors ->
+
+            if (errors != null) {
+                handler(null, errors)
+                return@retrieveMultiple
+            }
+
+            val finalAlias = alias + "."
+            var cartItems = ArrayList<CartItem>()
+            var cartOrder: CartOrder? = null
+
+            entityCollection!!.entityList?.forEach {
+                val cardItemsList = it.attribute!!.keyValuePairList!!.filter { it.key!!.contains(finalAlias) }
+                val cardItemsAttr = ArrayList<EntityCollection.KeyValuePairOfstringanyType>()
+                cardItemsAttr.addAll(cardItemsList)
+
+                cardItemsAttr.forEach {
+                    it.key = it.key!!.replace(finalAlias, "")
+                }
+
+                cartItems.add(CartItem(EntityCollection.Attribute(cardItemsAttr)))
+            }
+
+            entityCollection!!.entityList?.singleOrNull()?.let {
+                val cardOrderAttr = ArrayList<EntityCollection.KeyValuePairOfstringanyType>()
+                cardOrderAttr.addAll(it.attribute!!.keyValuePairList!!.filter { kv -> !kv.key!!.contains(finalAlias) })
+                cartOrder = CartOrder(EntityCollection.Attribute(cardOrderAttr))
+                cartOrder!!.addExistCartItems(cartItems)
+            }
+
+            handler(cartOrder, null)
+        }
+    }
+
     fun getOrderLine(id: String, handler: (ArrayList<CartItem>?, Errors?) -> Unit) {
 
         val attributesCart = arrayListOf(
@@ -454,6 +513,7 @@ class Datasource {
             handler(status, null)
         }
     }
+
 
     fun register(param: HashMap<String, String>?, handler: (DynamicAuthenticator.Token?, String?) -> Unit) {
         val request = AppRequestData(WebConfig.shared().REGISTER_URL, param)
