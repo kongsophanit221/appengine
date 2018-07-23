@@ -26,22 +26,22 @@ class MainActivity : AppCompatActivity() {
                 WebConfig.shared().PASSWORD)
         connector.authenticate(con) { u, e ->
 
-            Datasource.shared(this@MainActivity).getExistedOrders { cartItem, errors ->
+            Datasource.shared(this@MainActivity).getExistedOrders("b2d489ac-aa88-e811-8192-e0071b67cb31", { cartItem, errors ->
 
-            }
+            })
 
-            Datasource.shared(this@MainActivity).getLatestOrder { historyOrder, errors ->
-
-                val order: HistoryOrder = historyOrder!!
-
-                Datasource.shared(this@MainActivity).cancelOrder(order.id, { status, errors ->
-
-                    if (status!!) {
-                        Log.d("tMain", "successFul")
-                    }
-                })
-
-            }
+//            Datasource.shared(this@MainActivity).getLatestOrder { historyOrder, errors ->
+//
+//                val order: HistoryOrder = historyOrder!!
+//
+//                Datasource.shared(this@MainActivity).cancelOrder(order.id, { status, errors ->
+//
+//                    if (status!!) {
+//                        Log.d("tMain", "successFul")
+//                    }
+//                })
+//
+//            }
         }
 
 //        val param: HashMap<String, String> = hashMapOf(

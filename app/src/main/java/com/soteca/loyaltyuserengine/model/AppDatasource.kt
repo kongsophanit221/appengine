@@ -354,7 +354,7 @@ class Datasource {
     }
 
     // Wait to add condition for specific customer
-    fun getLatestOrder(handler: (HistoryOrder?, Errors?) -> Unit) {
+    fun getLatestOrder(customerId: String, handler: (HistoryOrder?, Errors?) -> Unit) {
 
         val attributesOrder = arrayListOf(
                 FetchExpression.Attributee("idcrm_posorderid"),
@@ -368,9 +368,10 @@ class Datasource {
                 FetchExpression.Attributee("modifiedon")
         )
 
+        val customerCondition = FetchExpression.Condition(attribute = "idcrm_customerid", operator = FetchExpression.Operator.equal, value = FetchExpression.Condition.Value(value = customerId, uiType = "contact"))
         val stateCodeCondition = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.value)
         val statusReasonCondition = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.COMPLETE.value)
-        val conditions = arrayListOf(stateCodeCondition, statusReasonCondition)
+        val conditions = arrayListOf(stateCodeCondition, statusReasonCondition, customerCondition)
         val filters = FetchExpression.Filter.andConditions(conditions)
         val orders = arrayListOf(FetchExpression.Order(attribute = "modifiedon", descending = true))
 
@@ -398,7 +399,7 @@ class Datasource {
         }
     }
 
-    fun getExistedOrders(handler: (CartOrder?, Errors?) -> Unit) {
+    fun getExistedOrders(customerId: String, handler: (CartOrder?, Errors?) -> Unit) {
 
         val alias = "orderItem"
 
@@ -414,7 +415,7 @@ class Datasource {
                 FetchExpression.Attributee("modifiedon")
         )
 
-        val customerCondition = FetchExpression.Condition(attribute = "idcrm_customerid", operator = FetchExpression.Operator.equal, value = FetchExpression.Condition.Value(value = "b2d489ac-aa88-e811-8192-e0071b67cb31", uiType = "contact"))
+        val customerCondition = FetchExpression.Condition(attribute = "idcrm_customerid", operator = FetchExpression.Operator.equal, value = FetchExpression.Condition.Value(value = customerId, uiType = "contact"))
         val orderItemLinkEntity = FetchExpression.LinkEntity(name = "idcrm_posorderline", from = "idcrm_order", to = "idcrm_posorderid", alias = alias, linkType = FetchExpression.LinkType.OUTER)
         val stateCodeCondition = FetchExpression.Condition(attribute = "statecode", operator = FetchExpression.Operator.equal, value = StateCode.ACTIVE.value)
         val statusReasonCondition = FetchExpression.Condition(attribute = "statuscode", operator = FetchExpression.Operator.equal, value = StatusReason.OPEN.value)
@@ -434,6 +435,12 @@ class Datasource {
             var cartItems = ArrayList<CartItem>()
             var cartOrder: CartOrder? = null
 
+            entityCollection!!.entityList?.first()?.let {
+                val cardOrderAttr = ArrayList<EntityCollection.KeyValuePairOfstringanyType>()
+                cardOrderAttr.addAll(it.attribute!!.keyValuePairList!!.filter { kv -> !kv.key!!.contains(finalAlias) })
+                cartOrder = CartOrder(EntityCollection.Attribute(cardOrderAttr))
+            }
+
             entityCollection!!.entityList?.forEach {
                 val cardItemsList = it.attribute!!.keyValuePairList!!.filter { it.key!!.contains(finalAlias) }
                 val cardItemsAttr = ArrayList<EntityCollection.KeyValuePairOfstringanyType>()
@@ -442,16 +449,10 @@ class Datasource {
                 cardItemsAttr.forEach {
                     it.key = it.key!!.replace(finalAlias, "")
                 }
-
                 cartItems.add(CartItem(EntityCollection.Attribute(cardItemsAttr)))
             }
 
-            entityCollection!!.entityList?.singleOrNull()?.let {
-                val cardOrderAttr = ArrayList<EntityCollection.KeyValuePairOfstringanyType>()
-                cardOrderAttr.addAll(it.attribute!!.keyValuePairList!!.filter { kv -> !kv.key!!.contains(finalAlias) })
-                cartOrder = CartOrder(EntityCollection.Attribute(cardOrderAttr))
-                cartOrder!!.addExistCartItems(cartItems)
-            }
+            cartOrder!!.addExistCartItems(cartItems)
 
             handler(cartOrder, null)
         }
