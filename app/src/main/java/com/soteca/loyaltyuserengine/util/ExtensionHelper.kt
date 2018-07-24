@@ -1,12 +1,7 @@
 package com.soteca.loyaltyuserengine.util
 
 import android.content.res.Resources
-import android.media.Image
-import android.util.Log
-import android.widget.ImageView
 import org.json.JSONObject
-import soteca.com.genisysandroid.framwork.authenticator.DynamicAuthenticator
-import soteca.com.genisysandroid.framwork.helper.crmFormatToDate
 
 class ExtensionHelper {
 
@@ -48,22 +43,5 @@ fun JSONObject.getSafeString(key: String): String {
     } catch (e: Exception) {
         e.printStackTrace()
         return ""
-    }
-}
-
-fun DynamicAuthenticator.Token.initWithJson(str: String): DynamicAuthenticator.Token {
-    
-    try {
-        val jsonObject = JSONObject(str)
-        val expiredDate = jsonObject.getSafeString("expired_at").crmFormatToDate()
-        val keyIdentifier = jsonObject.getSafeString("keyIdentifier")
-        val securityToken0 = jsonObject.getSafeString("securityToken0")
-        val securityToken1 = jsonObject.getSafeString("securityToken1")
-
-        return DynamicAuthenticator.Token(securityToken0, securityToken1, keyIdentifier, expiredDate)
-
-    } catch (e: Exception) {
-        val ee = e
-        return DynamicAuthenticator.Token()
     }
 }

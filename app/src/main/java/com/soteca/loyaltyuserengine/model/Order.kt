@@ -1,5 +1,6 @@
 package com.soteca.loyaltyuserengine.model
 
+import com.soteca.loyaltyuserengine.app.BaseItem
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
 import java.util.*

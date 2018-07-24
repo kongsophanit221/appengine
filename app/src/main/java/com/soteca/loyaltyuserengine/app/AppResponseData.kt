@@ -1,6 +1,5 @@
-package com.soteca.loyaltyuserengine.networking
+package com.soteca.loyaltyuserengine.app
 
-import android.util.Log
 import com.soteca.loyaltyuserengine.util.getSafeString
 import org.json.JSONObject
 
@@ -29,7 +28,7 @@ class AppResponseData() {
     }
 
     fun isError(): Boolean {
-        return this.code != "1"
+        return this.code != "0"
     }
 
     fun initNilError(): AppResponseData {

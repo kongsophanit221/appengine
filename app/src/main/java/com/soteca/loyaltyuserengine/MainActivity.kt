@@ -1,14 +1,15 @@
 package com.soteca.loyaltyuserengine
 
 import android.os.Bundle
+import android.os.SystemClock
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.soteca.loyaltyuserengine.api.WebConfig
-import com.soteca.loyaltyuserengine.model.AppAuthenticator
-import com.soteca.loyaltyuserengine.model.Datasource
-import com.soteca.loyaltyuserengine.model.HistoryOrder
+import com.soteca.loyaltyuserengine.app.AppAuthenticator
+import com.soteca.loyaltyuserengine.app.Datasource
 import soteca.com.genisysandroid.framwork.connector.DynamicsConfiguration
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -21,36 +22,56 @@ class MainActivity : AppCompatActivity() {
 
 
 //        val connector = DynamicsConnector.default(this)
-        val con = DynamicsConfiguration(DynamicsConfiguration.DynamicsConnectionType.office365,
-                WebConfig.shared().CRM_URL,
-                WebConfig.shared().USER_NAME,
-                WebConfig.shared().PASSWORD)
+//        val con = DynamicsConfiguration(DynamicsConfiguration.DynamicsConnectionType.office365,
+//                WebConfig.shared().CRM_URL,
+//                WebConfig.shared().USER_NAME,
+//                WebConfig.shared().PASSWORD)
 //        connector.authenticate(con) { u, e ->
 //
-//            Datasource.shared(this@MainActivity).getExistedOrders("b2d489ac-aa88-e811-8192-e0071b67cb31", { cartItem, errors ->
-//
-//            })
-
-//            Datasource.shared(this@MainActivity).getLatestOrder { historyOrder, errors ->
-//
-//                val order: HistoryOrder = historyOrder!!
-//
-//                Datasource.shared(this@MainActivity).cancelOrder(order.id, { status, errors ->
-//
-//                    if (status!!) {
-//                        Log.d("tMain", "successFul")
-//                    }
-//                })
+//            Datasource.shared(this).getCategaries { arrayList, errors ->
 //
 //            }
+//
 //        }
 
 
-        val authenticate = AppAuthenticator(this, "measna@haricrm.com", "123456")
-        val connector = DynamicsConnector(this, authenticate)
-        connector.authenticate(con, { users, error ->
+//        val con = DynamicsConfiguration(DynamicsConfiguration.DynamicsConnectionType.office365,
+//                WebConfig.shared().CRM_URL,
+//                WebConfig.shared().USER_NAME,
+//                WebConfig.shared().PASSWORD)
+//        val authenticate = AppAuthenticator(this, "measna@haricrm.com", "123456")
+//
+//        val connector = DynamicsConnector(this, authenticate)
+//
+//        connector.authenticate(con, { users, error ->
+//            authenticate.saveToStorage()
+//        })
 
+        val param: HashMap<String, String> = hashMapOf(
+                "emailaddress1" to "measna@haricrm.com",
+                "idcrm_password" to "123456",
+                "firstname" to "measna",
+                "lastname" to "ly",
+                "mobilephone" to "093943030",
+                "birthdate" to "1999-08-08T00:00:00Z",
+                "idcrm_companycode" to "300"
+        )
+        Datasource.shared(this).register(param, { isSuccess, message ->
+
+            if (!isSuccess) {
+                Log.d(TAG, "message: " + message)
+            }
+            Log.d(TAG, "success")
         })
+//
+//        Log.d(TAG,"time: " + SystemClock.elapsedRealtime())
+//        Log.d(TAG,"time: " + System.currentTimeMillis())
 
     }
+
+//    override fun onResume() {
+//        Log.d(TAG,"time: " + SystemClock.elapsedRealtime())
+//        Log.d(TAG,"time: " + System.currentTimeMillis())
+//        super.onResume()
+//    }
 }

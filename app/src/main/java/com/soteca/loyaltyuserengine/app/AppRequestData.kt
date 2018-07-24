@@ -1,10 +1,8 @@
-package com.soteca.loyaltyuserengine.networking
+package com.soteca.loyaltyuserengine.app
 
 import android.net.Uri
-import soteca.com.genisysandroid.framwork.model.encoder.Encoder
 import soteca.com.genisysandroid.framwork.networking.Request
 import java.net.URL
-import java.nio.charset.Charset
 
 class AppRequestData(private val urlString: String, private val param: HashMap<String, String>? = null) : Request {
 

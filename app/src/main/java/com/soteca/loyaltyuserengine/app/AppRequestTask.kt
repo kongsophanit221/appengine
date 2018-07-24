@@ -1,4 +1,4 @@
-package com.soteca.loyaltyuserengine.networking
+package com.soteca.loyaltyuserengine.app
 
 import android.os.AsyncTask
 import android.util.Log

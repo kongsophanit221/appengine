@@ -1,16 +1,10 @@
-package com.soteca.loyaltyuserengine.model
+package com.soteca.loyaltyuserengine.app
 
 import android.content.Context
-import android.util.Log
 import com.soteca.loyaltyuserengine.api.WebConfig
-import com.soteca.loyaltyuserengine.networking.AppRequestData
-import com.soteca.loyaltyuserengine.networking.AppRequestTask
-import com.soteca.loyaltyuserengine.networking.AppResponseData
+import com.soteca.loyaltyuserengine.model.*
+import com.soteca.loyaltyuserengine.model.Annotation
 import com.soteca.loyaltyuserengine.util.ImageScaleType
-import com.soteca.loyaltyuserengine.util.getSafeString
-import com.soteca.loyaltyuserengine.util.initWithJson
-import org.json.JSONObject
-import soteca.com.genisysandroid.framwork.authenticator.DynamicAuthenticator
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
@@ -194,11 +188,12 @@ class Datasource {
 
     fun getCategaries(handler: (ArrayList<Category>?, Errors?) -> Unit) {
 
-        val attributes = arrayListOf(
+        val attributebutes = arrayListOf(
                 "idcrm_poscategoryid",
                 "idcrm_name"
         )
-        val expression = FetchExpression.fetct(entityType = "idcrm_poscategory", attributes = attributes, filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
+        //, attributes = attributes
+        val expression = FetchExpression.fetct(entityType = "idcrm_poscategory", filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition("statecode", FetchExpression.Operator.equal, value = "0")))
 
         appData.getMultiple(Category(), expression) { categories: ArrayList<Category>?, errors: Errors? ->
 
@@ -516,21 +511,21 @@ class Datasource {
     }
 
 
-    fun register(param: HashMap<String, String>?, handler: (DynamicAuthenticator.Token?, String?) -> Unit) {
+    fun register(param: HashMap<String, String>?, handler: (Boolean, String?) -> Unit) {
         val request = AppRequestData(WebConfig.shared().REGISTER_URL, param)
 
         AppRequestTask(request, { result ->
 
             if (result.isError()) {
-                handler(null, result.message)
+                handler(false, result.message)
                 return@AppRequestTask
             }
 
-            handler(DynamicAuthenticator.Token().initWithJson(result.data), null)
+            handler(true, null)
         }).execute()
     }
 
-    fun login(param: HashMap<String, String>?): Pair<DynamicAuthenticator.Token?, String?> {
+    fun login(param: HashMap<String, String>?): Pair<AppToken?, String?> {
         val request = AppRequestData(WebConfig.shared().LOGIN_URL, param)
 
         val result = AppRequestTask(request).execute().get()
@@ -539,7 +534,7 @@ class Datasource {
             return null to result.message
         }
 
-        return DynamicAuthenticator.Token().initWithJson(result.data) to null
+        return AppToken(result.data) to null
     }
 
 
