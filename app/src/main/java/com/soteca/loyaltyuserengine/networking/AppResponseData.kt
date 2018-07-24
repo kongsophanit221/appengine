@@ -29,7 +29,7 @@ class AppResponseData() {
     }
 
     fun isError(): Boolean {
-        return this.code != "0"
+        return this.code != "1"
     }
 
     fun initNilError(): AppResponseData {

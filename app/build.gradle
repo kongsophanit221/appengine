@@ -33,4 +33,5 @@ dependencies {
 
     implementation project(':dynamicsconnector')
     implementation "org.simpleframework:simple-xml:2.7.1"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.5'
 }

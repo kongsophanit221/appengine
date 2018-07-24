@@ -2,6 +2,7 @@ package com.soteca.loyaltyuserengine.util
 
 import android.content.res.Resources
 import android.media.Image
+import android.util.Log
 import android.widget.ImageView
 import org.json.JSONObject
 import soteca.com.genisysandroid.framwork.authenticator.DynamicAuthenticator
@@ -62,6 +63,7 @@ fun DynamicAuthenticator.Token.initWithJson(str: String): DynamicAuthenticator.T
         return DynamicAuthenticator.Token(securityToken0, securityToken1, keyIdentifier, expiredDate)
 
     } catch (e: Exception) {
+        val ee = e
         return DynamicAuthenticator.Token()
     }
 }

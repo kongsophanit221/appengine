@@ -530,19 +530,16 @@ class Datasource {
         }).execute()
     }
 
-    fun login(param: HashMap<String, String>?, handler: (DynamicAuthenticator.Token?, String?) -> Unit) {
+    fun login(param: HashMap<String, String>?): Pair<DynamicAuthenticator.Token?, String?> {
         val request = AppRequestData(WebConfig.shared().LOGIN_URL, param)
 
-        AppRequestTask(request, { result ->
+        val result = AppRequestTask(request).execute().get()
 
-            if (result.isError()) {
-                handler(null, result.message)
-                return@AppRequestTask
-            }
+        if (result.isError()) {
+            return null to result.message
+        }
 
-            handler(DynamicAuthenticator.Token().initWithJson(result.data), null)
-
-        }).execute()
+        return DynamicAuthenticator.Token().initWithJson(result.data) to null
     }
 
 
