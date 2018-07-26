@@ -6,7 +6,7 @@ import java.util.*
 
 open class Order : BaseItem {
 
-    open var id: String = ""
+    open var id: String? = ""
     open var totalTax: Double = 0.0
     open var totalDiscount: Double = 0.0
     open var totalItemAmount: Double = 0.0
@@ -18,6 +18,14 @@ open class Order : BaseItem {
     open var orderItems: ArrayList<CartItem> = ArrayList()
 
     constructor()
+
+    constructor(name: String) {
+        this.name = name
+    }
+
+    constructor(id: String, name: String) : this(name){
+        this.id = id
+    }
 
     constructor(attribute: EntityCollection.Attribute) : super(attribute) {
         this.id = attribute!!["idcrm_posorderid"]!!.associatedValue.toString()
@@ -38,5 +46,17 @@ open class Order : BaseItem {
     override fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
         return Order(attribute)
     }
+
+    val entityReference: EntityReference?
+        get() {
+            return EntityReference(id = id, logicalName = "idcrm_posorder")
+        }
+
+    open val keyValuePair: EntityCollection.Attribute?
+        get() {
+            val attr = EntityCollection.Attribute(arrayListOf())
+            attr["idcrm_name"] = EntityCollection.ValueType.string(name)
+            return attr
+        }
 
 }

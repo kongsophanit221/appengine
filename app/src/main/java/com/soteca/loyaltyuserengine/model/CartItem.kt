@@ -6,7 +6,7 @@ import soteca.com.genisysandroid.framwork.model.EntityReference
 class CartItem : BaseItem {
 
     var id: String = ""
-    var product: Product? = null
+    var product: Product? = Product()
     var quantity: Double = 0.0
     var description: String? = null
     var tax: Double = 0.0
@@ -14,6 +14,8 @@ class CartItem : BaseItem {
     var pricePerUnit: Double = 0.0
     var amount: Double = 0.0
     var lineNumber: Int = 0
+    var name: String = ""
+    var productId: String = ""
 
     constructor()
 
@@ -42,8 +44,36 @@ class CartItem : BaseItem {
         this.tax = amount * tax //the calculate of tax if discount amount or amount
     }
 
+    constructor(name: String, productId: String) {
+        this.name = name
+        this.productId = productId
+    }
+
+    constructor(product: Product) {
+        this.product = product
+    }
+
     override fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
         return CartItem(attribute)
     }
+
+    val productReference: EntityReference?
+        get() {
+            return EntityReference(id = productId, logicalName = "idcrm_posproduct")
+        }
+
+    val entityReference: EntityReference?
+        get() {
+            return EntityReference(id = id, logicalName = "idcrm_posorderline")
+        }
+
+    val keyValuePairs: EntityCollection.Attribute?
+        get() {
+            val attr = EntityCollection.Attribute(arrayListOf())
+//            attr["idcrm_posorderlineid"] = EntityCollection.ValueType.guid(entityReference!!.id!!.toString())
+            attr["idcrm_name"] = EntityCollection.ValueType.string(product!!.name)
+            attr["idcrm_productid"] = EntityCollection.ValueType.guid(product!!.id)
+            return attr
+        }
 
 }

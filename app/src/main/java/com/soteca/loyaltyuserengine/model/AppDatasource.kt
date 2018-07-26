@@ -7,15 +7,21 @@ import com.soteca.loyaltyuserengine.networking.AppRequestData
 import com.soteca.loyaltyuserengine.networking.AppRequestTask
 import com.soteca.loyaltyuserengine.networking.AppResponseData
 import com.soteca.loyaltyuserengine.util.ImageScaleType
+import com.soteca.loyaltyuserengine.util.SharedPreferenceHelper
 import com.soteca.loyaltyuserengine.util.getSafeString
 import com.soteca.loyaltyuserengine.util.initWithJson
 import org.json.JSONObject
+import org.simpleframework.xml.convert.AnnotationStrategy
+import org.simpleframework.xml.core.Persister
+import org.simpleframework.xml.strategy.Strategy
 import soteca.com.genisysandroid.framwork.authenticator.DynamicAuthenticator
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
+import soteca.com.genisysandroid.framwork.helper.decodeSpecialCharacter
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
 import soteca.com.genisysandroid.framwork.model.FetchExpression
 import soteca.com.genisysandroid.framwork.networking.Errors
+import java.io.ByteArrayOutputStream
 
 
 interface AppDatasource {
@@ -387,7 +393,7 @@ class Datasource {
 
             historyOrder?.let {
 
-                getOrderLine(it.id) { cartItems: ArrayList<CartItem>?, errors: Errors? ->
+                getOrderLine(it.id!!) { cartItems: ArrayList<CartItem>?, errors: Errors? ->
 
                     it.addExistCartItems(cartItems!!)
                     handler(it, errors)
@@ -484,6 +490,99 @@ class Datasource {
         }).execute()
     }
 
+    fun createOrder(order: Order, handler: (Order?, Errors?) -> Unit) {
+
+        val keyValuePairs = order.keyValuePair
+        keyValuePairs!!["statecode"] = EntityCollection.ValueType.optionSetValue(StateCode.ACTIVE.value)
+        keyValuePairs["statuscode"] = EntityCollection.ValueType.optionSetValue(StatusReason.OPEN.value)
+
+        val entity = EntityCollection.Entity(attribute = keyValuePairs, id = order.id, logicalName = order.entityReference!!.logicalName)
+
+        appData.create(entity) { id, errors ->
+            if (errors != null) {
+                handler(null, errors)
+                return@create
+            }
+            SharedPreferenceHelper.getInstance(context).setOrderId(id!!)
+            handler(Order(id, order.name), null)
+        }
+    }
+
+    fun addProductToCart(product: Product, handler: (Boolean?, Errors?) -> Unit) {
+        val orderItems = createOrderItem(product)
+        val errorItems = arrayListOf<CartItem>()
+
+        orderItems.forEach { eachItem ->
+            addItemToCarts(eachItem) { status, errors ->
+                if (errors != null) {
+                    handler(null, errors)
+                    errorItems.add(eachItem)
+                    return@addItemToCarts
+                }
+                handler(status, null)
+            }
+        }
+    }
+
+    fun createOrderItem(product: Product): ArrayList<CartItem> {
+        val orderItems: ArrayList<CartItem> = ArrayList()
+//        val orderItem = CartItem(product.name, product.id)
+        val orderItem = CartItem(product)
+        orderItems.add(orderItem)
+        return orderItems
+    }
+
+    fun addItemToCarts(orderItem: CartItem, handler: (Boolean?, Errors?) -> Unit) {
+        val orderId = SharedPreferenceHelper.getInstance(context).getOrderId()
+
+        if (orderId.isNullOrEmpty()) {
+            createOrder(Order(name = "CustomerCartItem")) { order, errors ->
+                if (errors != null) {
+                    handler(null, errors)
+                    return@createOrder
+                }
+
+                val keyValuePairs = orderItem.keyValuePairs
+                keyValuePairs!!["statecode"] = EntityCollection.ValueType.optionSetValue(StateCode.ACTIVE.value)
+                keyValuePairs["statuscode"] = EntityCollection.ValueType.optionSetValue(StatusReason.OPEN.value)
+                keyValuePairs["idcrm_order"] = EntityCollection.ValueType.guid(order!!.id!!)
+                val entity = EntityCollection.Entity(attribute = keyValuePairs, id = orderItem.entityReference!!.id, logicalName = orderItem.entityReference!!.logicalName)
+
+//                val serializer = Persister(AnnotationStrategy())
+//                val output = ByteArrayOutputStream()
+//                serializer.write(entity, output)
+//                Log.d("tEntity", "First: $output")
+
+                appData.create(entity) { status, errors ->
+                    if (errors != null) {
+                        handler(null, errors)
+                        return@create
+                    }
+                    Log.d("tMain", "first: $status -> $errors")
+                    handler(true, null)
+                }
+            }
+        } else {
+            val keyValuePairs = orderItem.keyValuePairs
+            keyValuePairs!!["idcrm_order"] = EntityCollection.ValueType.guid(orderId!!)
+            keyValuePairs["statuscode"] = EntityCollection.ValueType.optionSetValue(StatusReason.OPEN.value)
+            val entity = EntityCollection.Entity(attribute = keyValuePairs, id = orderItem.entityReference!!.id, logicalName = orderItem.entityReference!!.logicalName)
+
+//            val serializer = Persister(AnnotationStrategy())
+//            val output = ByteArrayOutputStream()
+//            serializer.write(entity, output)
+//            Log.d("tEntity", "Second: $output")
+
+            appData.create(entity) { status, errors ->
+                if (errors != null) {
+                    handler(null, errors)
+                    return@create
+                }
+                Log.d("tMain", "second: $status -> $errors")
+                handler(null, errors)
+            }
+        }
+    }
 
 //    fun getAnnotation(entityReference: EntityReference?, scaleType: ImageScaleType, handler: (Annotation?, Errors?) -> Unit) {
 //
