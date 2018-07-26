@@ -22,8 +22,8 @@ class HeaderEncoder() {
             return HeaderEncoder(urlString, credential)
         }
 
-        fun getSecurityToken(urlString: String, configuration: DynamicsConfiguration?, deviceToken: String): HeaderEncoder {
-            return HeaderEncoder(urlString, configuration, deviceToken)
+        fun getSecurityToken(urlString: String, configuration: DynamicsConfiguration?): HeaderEncoder {
+            return HeaderEncoder(urlString, configuration)
         }
 
         fun create(urlString: String, contentSecurity: Triple<String, String, String>, isVsDebuggerCausalityData: Boolean = false): HeaderEncoder {
@@ -77,7 +77,6 @@ class HeaderEncoder() {
         this.securityEncoder = SecurityEncoder(encryptedData)
     }
 
-    // Get Device Token request
     private constructor(urlString: String, credential: HashMap<String, String>?) : this() {
         this.action = Action("http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue")
         this.toAction = Action(urlString)
@@ -86,18 +85,16 @@ class HeaderEncoder() {
     }
 
     // Get Security Token request
-    private constructor(urlString: String, configuration: DynamicsConfiguration?, deviceToken: String) : this() {
-//        this.vsDebuggerCausalityData = "uIDPozBEz+P/wJdOhoN2XNauvYcAAAAAK0Y6fOjvMEqbgs9ivCmFPaZlxcAnCJ1GiX+Rpi09nSYACQAA"
+    private constructor(urlString: String, configuration: DynamicsConfiguration?) : this() {
         this.action = Action("http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue")
         this.toAction = Action(urlString)
 
         val usernameToken = SecurityEncoder.UsernameToken("user", configuration!!.username, SecurityEncoder.UsernameToken.Password(configuration!!.password))
-        this.securityEncoder = SecurityEncoder(usernameToken, deviceToken)
+        this.securityEncoder = SecurityEncoder(usernameToken)
     }
 
     // Create Update Delete
-
-    private constructor(urlString: String, action: ActionUpload,contentSecurity: Triple<String, String, String>, isVsDebuggerCausalityData: Boolean) : this() {
+    private constructor(urlString: String, action: ActionUpload, contentSecurity: Triple<String, String, String>, isVsDebuggerCausalityData: Boolean) : this() {
 
         if (isVsDebuggerCausalityData) {
             this.vsDebuggerCausalityData = "uIDPozJEz+P/wJdOhoN2XNauvYcAAAAAK0Y6fOjvMEqbgs9ivCmFPaZlxcAnCJ1GiX+Rpi09nSYACQAA"

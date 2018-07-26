@@ -137,6 +137,13 @@ class RequestTask<T : Decoder>(val decoder: Decoder?, val done: ((result: T?, er
                         }
                         return (createDecoder as T to null)
                     }
+                    is ExecuteMultipleDecoder -> {
+                        val executeMultipleDecoder = serializer.read(ExecuteMultipleDecoder::class.java, inputStream)
+                        if (executeMultipleDecoder.responseItems == null) {
+                            return null to ResponseError.getInstance(AuthenticationError.invalidCredential)
+                        }
+                        return (executeMultipleDecoder as T to null)
+                    }
                     is StringDecoder -> { //Register Device
                         return (StringDecoder(null, streamToString(inputStream)) as T to null)
                     }

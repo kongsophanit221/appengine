@@ -19,7 +19,7 @@ class CartOrder : Order {
 
     constructor()
 
-    constructor(attribute: EntityCollection.Attribute) : super(attribute)
+    private constructor(attribute: EntityCollection.Attribute) : super(attribute)
 
     override var totalTax: Double = 0.0
         get() {
