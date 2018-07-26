@@ -7,8 +7,8 @@ class CartOrder : Order {
     companion object {
         private var _shared: CartOrder? = null
 
-        fun newInstance(attribute: EntityCollection.Attribute? = null): CartOrder {
-            if (_shared == null) {
+        fun shared(attribute: EntityCollection.Attribute? = null): CartOrder? {
+            if (_shared == null && attribute != null) {
                 _shared = CartOrder(attribute!!)
             }
             return _shared!!
@@ -19,7 +19,9 @@ class CartOrder : Order {
 
     constructor()
 
-    private constructor(attribute: EntityCollection.Attribute) : super(attribute)
+    constructor(attribute: EntityCollection.Attribute) : super(attribute) {
+        _shared = this
+    }
 
     override var totalTax: Double = 0.0
         get() {

@@ -510,7 +510,6 @@ class Datasource {
         }
     }
 
-
     fun register(param: HashMap<String, String>?, handler: (Boolean, String?) -> Unit) {
         val request = AppRequestData(WebConfig.shared().REGISTER_URL, param)
 
@@ -535,6 +534,15 @@ class Datasource {
         }
 
         return AppToken(result.data) to null
+    }
+
+    fun addItemtoCartOrder(product: Product) {
+
+        if (CartOrder.shared() == null) {
+            
+        } else {
+
+        }
     }
 
 
