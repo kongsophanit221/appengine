@@ -1,12 +1,12 @@
 package com.soteca.loyaltyuserengine.util
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import org.json.JSONObject
 
 class SharedPreferenceHelper(ctx: Context) {
 
-    private val ORDER_ID = "CART_ID"
+    private val ORDER_ID = "ORDER_ID"
 
     companion object {
         private var prefs: SharedPreferences? = null
@@ -26,19 +26,18 @@ class SharedPreferenceHelper(ctx: Context) {
     * ORDER_ID
     *
     * */
-    @SuppressLint("CommitPrefEdits")
-    fun setOrderId(cartId: String) {
+    fun setOrderId(orderId: String) {
         val editor = prefs!!.edit()
-        editor.putString(ORDER_ID, cartId)
+        editor.putString(ORDER_ID, orderId)
         editor.apply()
     }
 
     fun getOrderId(): String? {
-        val cartId = prefs!!.getString(ORDER_ID, "")
-        if (cartId == "") {
+        val orderId = prefs!!.getString(ORDER_ID, "")
+        if (orderId == "") {
             return null
         }
-        return cartId
+        return orderId
     }
 
     fun deleteOderId() {

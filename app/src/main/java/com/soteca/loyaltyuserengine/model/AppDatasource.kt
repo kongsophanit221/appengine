@@ -17,9 +17,13 @@ import org.simpleframework.xml.strategy.Strategy
 import soteca.com.genisysandroid.framwork.authenticator.DynamicAuthenticator
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 import soteca.com.genisysandroid.framwork.helper.decodeSpecialCharacter
+import soteca.com.genisysandroid.framwork.model.AttributeMetadata
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
 import soteca.com.genisysandroid.framwork.model.FetchExpression
+import soteca.com.genisysandroid.framwork.model.encoder.Encoder
+import soteca.com.genisysandroid.framwork.model.encoder.body.ActionRequest
+import soteca.com.genisysandroid.framwork.model.encoder.body.KeyValuePair
 import soteca.com.genisysandroid.framwork.networking.Errors
 import java.io.ByteArrayOutputStream
 
@@ -492,7 +496,7 @@ class Datasource {
 
     fun createOrder(order: Order, handler: (Order?, Errors?) -> Unit) {
 
-        val keyValuePairs = order.keyValuePair
+        val keyValuePairs = order.keyValuePairs
         keyValuePairs!!["statecode"] = EntityCollection.ValueType.optionSetValue(StateCode.ACTIVE.value)
         keyValuePairs["statuscode"] = EntityCollection.ValueType.optionSetValue(StatusReason.OPEN.value)
 
@@ -508,31 +512,24 @@ class Datasource {
         }
     }
 
-    fun addProductToCart(product: Product, handler: (Boolean?, Errors?) -> Unit) {
-        val orderItems = createOrderItem(product)
-        val errorItems = arrayListOf<CartItem>()
-
-        orderItems.forEach { eachItem ->
-            addItemToCarts(eachItem) { status, errors ->
-                if (errors != null) {
-                    handler(null, errors)
-                    errorItems.add(eachItem)
-                    return@addItemToCarts
-                }
-                handler(status, null)
-            }
-        }
-    }
-
     fun createOrderItem(product: Product): ArrayList<CartItem> {
         val orderItems: ArrayList<CartItem> = ArrayList()
-//        val orderItem = CartItem(product.name, product.id)
-        val orderItem = CartItem(product)
+        val orderItem = CartItem(product.name, product.id)
         orderItems.add(orderItem)
         return orderItems
     }
 
-    fun addItemToCarts(orderItem: CartItem, handler: (Boolean?, Errors?) -> Unit) {
+    fun createOrderLines(actionRequests: ArrayList<ActionRequest>, handler: (Boolean?, Errors?) -> Unit) {
+        DynamicsConnector.default(context).executeMultiple(actionRequests) { responses, errors ->
+            if (errors != null) {
+                handler(null, errors)
+                return@executeMultiple
+            }
+            handler(true, null)
+        }
+    }
+
+    fun addItemToCarts(product: Product, handler: (Boolean?, Errors?) -> Unit) {
         val orderId = SharedPreferenceHelper.getInstance(context).getOrderId()
 
         if (orderId.isNullOrEmpty()) {
@@ -542,44 +539,41 @@ class Datasource {
                     return@createOrder
                 }
 
-                val keyValuePairs = orderItem.keyValuePairs
-                keyValuePairs!!["statecode"] = EntityCollection.ValueType.optionSetValue(StateCode.ACTIVE.value)
-                keyValuePairs["statuscode"] = EntityCollection.ValueType.optionSetValue(StatusReason.OPEN.value)
-                keyValuePairs["idcrm_order"] = EntityCollection.ValueType.guid(order!!.id!!)
-                val entity = EntityCollection.Entity(attribute = keyValuePairs, id = orderItem.entityReference!!.id, logicalName = orderItem.entityReference!!.logicalName)
+                val actionRequests: ArrayList<ActionRequest> = ArrayList()
+                createOrderItem(product).forEach { eachItem ->
+                    val keyValuePairs = eachItem.keyValuePairs
+                    keyValuePairs!!["statecode"] = EntityCollection.ValueType.optionSetValue(StateCode.ACTIVE.value)
+                    keyValuePairs["idcrm_order"] = EntityCollection.ValueType.entityReference(order!!.entityReference!!)
 
-//                val serializer = Persister(AnnotationStrategy())
-//                val output = ByteArrayOutputStream()
-//                serializer.write(entity, output)
-//                Log.d("tEntity", "First: $output")
-
-                appData.create(entity) { status, errors ->
+                    actionRequests.add(ActionRequest(action = ActionRequest.Action.create, logicalName = eachItem.entityReference!!.logicalName!!, attribute = keyValuePairs))
+                }
+                createOrderLines(actionRequests) { status, errors ->
                     if (errors != null) {
                         handler(null, errors)
-                        return@create
+                        return@createOrderLines
                     }
-                    Log.d("tMain", "first: $status -> $errors")
-                    handler(true, null)
+                    handler(status, errors)
                 }
+
             }
-        } else {
-            val keyValuePairs = orderItem.keyValuePairs
-            keyValuePairs!!["idcrm_order"] = EntityCollection.ValueType.guid(orderId!!)
-            keyValuePairs["statuscode"] = EntityCollection.ValueType.optionSetValue(StatusReason.OPEN.value)
-            val entity = EntityCollection.Entity(attribute = keyValuePairs, id = orderItem.entityReference!!.id, logicalName = orderItem.entityReference!!.logicalName)
+        } else if (orderId!!.isNotEmpty() || orderId!!.isNotBlank()) {
+            val actionRequests: ArrayList<ActionRequest> = ArrayList()
 
-//            val serializer = Persister(AnnotationStrategy())
-//            val output = ByteArrayOutputStream()
-//            serializer.write(entity, output)
-//            Log.d("tEntity", "Second: $output")
+            val order = Order(orderId, name = "idcrm_posorder")
+            createOrderItem(product).forEach { eachItem ->
+                val keyValuePairs = eachItem.keyValuePairs
+                keyValuePairs!!["statecode"] = EntityCollection.ValueType.optionSetValue(StateCode.ACTIVE.value)
+                keyValuePairs["idcrm_order"] = EntityCollection.ValueType.entityReference(order.entityReference!!)
 
-            appData.create(entity) { status, errors ->
+                actionRequests.add(ActionRequest(action = ActionRequest.Action.create, logicalName = eachItem.entityReference!!.logicalName!!, attribute = keyValuePairs))
+            }
+
+            createOrderLines(actionRequests) { status, errors ->
                 if (errors != null) {
                     handler(null, errors)
-                    return@create
+                    return@createOrderLines
                 }
-                Log.d("tMain", "second: $status -> $errors")
-                handler(null, errors)
+                handler(status, errors)
             }
         }
     }

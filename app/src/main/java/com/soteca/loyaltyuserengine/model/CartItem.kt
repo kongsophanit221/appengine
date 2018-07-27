@@ -49,30 +49,25 @@ class CartItem : BaseItem {
         this.productId = productId
     }
 
-    constructor(product: Product) {
-        this.product = product
-    }
-
     override fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
         return CartItem(attribute)
     }
-
-    val productReference: EntityReference?
-        get() {
-            return EntityReference(id = productId, logicalName = "idcrm_posproduct")
-        }
 
     val entityReference: EntityReference?
         get() {
             return EntityReference(id = id, logicalName = "idcrm_posorderline")
         }
 
+    val productReference: EntityReference?
+        get() {
+            return EntityReference(id = productId, logicalName = "idcrm_posproduct")
+        }
+
     val keyValuePairs: EntityCollection.Attribute?
         get() {
             val attr = EntityCollection.Attribute(arrayListOf())
-//            attr["idcrm_posorderlineid"] = EntityCollection.ValueType.guid(entityReference!!.id!!.toString())
-            attr["idcrm_name"] = EntityCollection.ValueType.string(product!!.name)
-            attr["idcrm_productid"] = EntityCollection.ValueType.guid(product!!.id)
+            attr["idcrm_name"] = EntityCollection.ValueType.string(name)
+            attr["idcrm_productid"] = EntityCollection.ValueType.entityReference(productReference!!)
             return attr
         }
 

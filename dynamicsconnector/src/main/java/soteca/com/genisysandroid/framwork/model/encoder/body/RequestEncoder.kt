@@ -12,6 +12,7 @@ import org.simpleframework.xml.stream.Format
 import org.simpleframework.xml.stream.InputNode
 import org.simpleframework.xml.stream.OutputNode
 import soteca.com.genisysandroid.framwork.helper.decodeSpecialCharacter
+import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
 import soteca.com.genisysandroid.framwork.model.FetchExpression
 import java.io.ByteArrayOutputStream
@@ -30,7 +31,8 @@ class RequestEncoder() {
         ALL_ENTITY("a:RetrieveAllEntitiesRequest" to "RetrieveAllEntities"),
         RETRIEVE_MULTIPLE("b:RetrieveMultipleRequest" to "RetrieveMultiple"),
         SET_STATE("b:SetStateRequest" to "SetState"),
-        STATE_REQUEST_FULFILL("b:FulfillSalesOrderRequest" to "FulfillSalesOrder")
+        STATE_REQUEST_FULFILL("b:FulfillSalesOrderRequest" to "FulfillSalesOrder"),
+        EXECUTE_MULTIPLE("a:ExecuteMultipleRequest" to "ExecuteMultiple")
     }
 
     companion object {
@@ -70,7 +72,7 @@ class RequestEncoder() {
             return RequestEncoder(typeName.first, typeName.second, keyValues)
         }
 
-        fun multiple(fetchExpression: FetchExpression): RequestEncoder {
+        fun multipleRetreive(fetchExpression: FetchExpression): RequestEncoder {
             val typeName = RequestTypeName.RETRIEVE_MULTIPLE.value
             val keyValues = listOf(
                     KeyValuePair("Query", ValueType.query("a:FetchExpression", fetchExpression))
@@ -95,6 +97,16 @@ class RequestEncoder() {
             )
             val params = Parameters(keyValues, typeName.second, id, type)
             return RequestEncoder(typeName.first, typeName.second, params)
+        }
+
+        fun multipleExecute(actionRequests: ArrayList<ActionRequest>): RequestEncoder {
+            val typeName = RequestTypeName.EXECUTE_MULTIPLE.value
+            val keyValues = listOf(
+                    KeyValuePair("Settings", ValueType.settings("c:ExecuteMultipleSettings", "true", "true")),
+                    KeyValuePair("Requests", ValueType.actions("c:OrganizationRequestCollection", actionRequests))
+            )
+
+            return RequestEncoder(typeName.first, typeName.second, keyValues)
         }
     }
 
@@ -159,7 +171,10 @@ sealed class ValueType(val type: String) {
     class query(type: String, val fetchExpression: FetchExpression) : ValueType(type) // for query retreive multiple
     class valueC(type: String, val text: String) : ValueType(type)
     class entityReference(type: String, val entityReference: EntityReference) : ValueType(type)
-//    class
+    class settings(type: String, val continueOnError: String, val returnResponses: String) : ValueType(type)
+    class actions(type: String, val actions: ArrayList<ActionRequest>) : ValueType(type)
+    class entity(type: String, val entity: EntityCollection.Entity) : ValueType(type)
+    class entityReference2(type: String, val entityReference: EntityReference) : ValueType(type)
 }
 
 @Root(name = "RequestId")
@@ -227,8 +242,11 @@ class ParamConverter : Converter<Parameters> {
         node!!.reference = "http://schemas.microsoft.com/xrm/2011/Contracts"
 
         when (value!!.requestName) {
-            RequestEncoder.RequestTypeName.RETRIEVE_ENTITY.value.second, RequestEncoder.RequestTypeName.ALL_ENTITY.value.second -> {
-                node!!.namespaces.setReference("http://schemas.datacontract.org/2004/07/System.Collections.Generic", "b")
+            RequestEncoder.RequestTypeName.TIME_STAMP.value.second, RequestEncoder.RequestTypeName.WHOAMI.value.second,
+            RequestEncoder.RequestTypeName.USER_PRIVILEGE.value.second, RequestEncoder.RequestTypeName.RETRIEVE_MULTIPLE.value.second,
+            RequestEncoder.RequestTypeName.STATE_REQUEST_FULFILL.value.second -> {
+
+                node!!.namespaces.setReference("http://schemas.datacontract.org/2004/07/System.Collections.Generic", "c")
 
                 if (value!!.keyValues != null) {
                     value!!.keyValues!!.forEach {
@@ -237,6 +255,7 @@ class ParamConverter : Converter<Parameters> {
                 }
             }
             RequestEncoder.RequestTypeName.STATE_REQUEST_FULFILL.value.second -> {
+
                 node!!.setAttribute("xmlns:b", "http://schemas.microsoft.com/xrm/2011/Contracts")
                 node!!.setAttribute("xmlns:i", "http://www.w3.org/2001/XMLSchema-instance")
 
@@ -259,21 +278,22 @@ class ParamConverter : Converter<Parameters> {
                 logicalNameChild.value = "orderclose"
 
             }
-            else -> {
-                node!!.namespaces.setReference("http://schemas.datacontract.org/2004/07/System.Collections.Generic", "c")
+            else -> { // Execute multi Create, Update, Delete Request
+                node!!.namespaces.setReference("http://schemas.datacontract.org/2004/07/System.Collections.Generic", "b")
+
+//                if (value!!.requestName)
 
                 if (value!!.keyValues != null) {
                     value!!.keyValues!!.forEach {
-                        val outputStream = ByteArrayOutputStream()
-//                        serializer.write(it, outputStream)
-//                        val content = outputStream.toByteArray().toString(Charsets.UTF_8).decodeSpecialCharacter().decodeSpecialCharacter()
+
+                        if (it.key == "Target") {
+                            node!!.setAttribute("xmlns:b", "http://schemas.datacontract.org/2004/07/System.Collections.Generic")
+                        }
                         serializer.write(it, node!!)
                     }
                 }
             }
         }
-
-
     }
 
     override fun read(node: InputNode?): Parameters {
@@ -309,6 +329,8 @@ class KeyValueConverter : Converter<KeyValuePair> {
 class ValueConverter : Converter<ValueType> {
 
     private var crmReference = "http://schemas.microsoft.com/crm/2011/Contracts"
+    private var xrmContact2011 = "http://schemas.microsoft.com/xrm/2011/Contracts"
+    private var xrmContact2012 = "http://schemas.microsoft.com/xrm/2012/Contracts"
 
     override fun write(node: OutputNode?, value: ValueType?) {
 
@@ -343,6 +365,46 @@ class ValueConverter : Converter<ValueType> {
                 createClideNode(node!!, "LogicalName", entityReference.logicalName, crmReference)
                 createClideNode(node!!, "Name", entityReference.name, crmReference)
             }
+            is ValueType.settings -> {
+                node!!.namespaces.setReference(xrmContact2012, "c")
+                createClideNode(node!!, "ContinueOnError", value.continueOnError, xrmContact2012)
+                createClideNode(node!!, "ReturnResponses", value.returnResponses, xrmContact2012)
+            }
+            is ValueType.actions -> {
+                node!!.namespaces.setReference(xrmContact2012, "c")
+                val actions = value.actions
+                val format = Format(0)
+                val serializer = Persister(AnnotationStrategy(), format)
+
+                actions.forEach {
+                    serializer.write(it, node!!)
+                }
+            }
+            is ValueType.entity -> {
+                val entity = value.entity
+
+                if (entity.attribute != null && entity.attribute!!.keyValuePairList!!.size > 0) {
+                    val format = Format(0)
+                    val serializer = Persister(AnnotationStrategy(), format)
+                    serializer.write(entity.attribute, node!!)
+                } else {
+                    createClideNode(node!!, "Attributes", "", xrmContact2011)
+                }
+
+                createClideNode(node!!, "Id", entity.id, xrmContact2011)
+                createClideNode(node!!, "LogicalName", entity.logicalName, xrmContact2011)
+            }
+
+            is ValueType.entityReference2 -> {
+                val entityReference = value.entityReference
+                createClideNode(node!!, "Id", entityReference.id, xrmContact2011)
+                createClideNode(node!!, "LogicalName", entityReference.logicalName, xrmContact2011)
+
+                entityReference.name?.let {
+                    createClideNode(node!!, "Name", entityReference.name, xrmContact2011)
+                }
+
+            }
         }
     }
 
@@ -350,12 +412,14 @@ class ValueConverter : Converter<ValueType> {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    private fun createClideNode(node: OutputNode?, name: String, value: String?, reference: String? = null) {
+    private fun createClideNode(node: OutputNode?, name: String, value: String?, reference: String? = null, prefix: String? = null) {
         if (value != null) {
             val childNode = node!!.getChild(name)
             childNode.value = value
 
-            if (reference != null) {
+            if (reference != null && prefix != null) {
+                childNode.namespaces.setReference(reference, prefix)
+            } else if (reference != null) {
                 childNode.reference = reference
             }
         }

@@ -81,4 +81,11 @@ class DynamicsConfiguration() {
                 "CONNECTION_TYPE" to connectionType!!.value)
         SharedPreferenceHelper.getInstance(context).setConfiguration(configure)
     }
+
+    fun isSameConfiguration(newConfig: DynamicsConfiguration): Boolean {
+        return this.connectionType == newConfig.connectionType &&
+                this.username == newConfig.username &&
+                this.password == newConfig.password &&
+                this.crmUrl == this.crmUrl
+    }
 }

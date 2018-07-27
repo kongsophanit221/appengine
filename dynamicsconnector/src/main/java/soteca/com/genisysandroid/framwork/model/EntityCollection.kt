@@ -67,6 +67,7 @@ data class EntityCollection(
 //    }
 
     @Root(name = "Attributes", strict = false)
+    @Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
     @NamespaceList(
             Namespace(reference = "http://schemas.datacontract.org/2004/07/System.Collections.Generic", prefix = "c"),
             Namespace(reference = "http://schemas.microsoft.com/xrm/2011/Contracts")
@@ -266,9 +267,12 @@ data class EntityCollection(
                         nodeLogicalName.reference = "http://schemas.microsoft.com/xrm/2011/Contracts"
                         nodeLogicalName.value = entityReference.logicalName
 
-                        val nodeName = node.getChild("Name")
-                        nodeName.reference = "http://schemas.microsoft.com/xrm/2011/Contracts"
-                        nodeName.value = entityReference.name
+                        entityReference.name?.let {
+                            val nodeName = node.getChild("Name")
+                            nodeName.reference = "http://schemas.microsoft.com/xrm/2011/Contracts"
+                            nodeName.value = it
+                        }
+
                     }
 
                     is EntityCollection.ValueType.aliasedValue -> TODO()

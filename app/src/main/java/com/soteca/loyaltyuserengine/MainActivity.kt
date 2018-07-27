@@ -32,9 +32,7 @@ class MainActivity : AppCompatActivity() {
 
             /*Datasource.shared(this).getProducts { products, errors ->
                 val product = products!!.first()
-                Datasource.shared(this).addProductToCart(product) { status, errors ->
-                    Log.d(TAG, "$status -> $errors")
-                }
+                Datasource.shared(this).addItemToCarts(product) { status, error -> }
             }*/
         }
     }

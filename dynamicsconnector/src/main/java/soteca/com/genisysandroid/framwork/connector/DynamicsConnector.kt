@@ -4,9 +4,13 @@ import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.runBlocking
+import org.simpleframework.xml.convert.AnnotationStrategy
+import org.simpleframework.xml.core.Persister
+import org.simpleframework.xml.stream.Format
 import soteca.com.genisysandroid.framwork.authenticator.Authenticator
 import soteca.com.genisysandroid.framwork.authenticator.DynamicAuthenticator
 import soteca.com.genisysandroid.framwork.helper.SharedPreferenceHelper
+import soteca.com.genisysandroid.framwork.helper.decodeSpecialCharacter
 import soteca.com.genisysandroid.framwork.model.*
 import soteca.com.genisysandroid.framwork.model.decoder.*
 import soteca.com.genisysandroid.framwork.model.encoder.EnvelopeEncoder
@@ -15,6 +19,7 @@ import soteca.com.genisysandroid.framwork.model.encoder.header.HeaderEncoder
 import soteca.com.genisysandroid.framwork.networking.AuthenticationError
 import soteca.com.genisysandroid.framwork.networking.Errors
 import soteca.com.genisysandroid.framwork.networking.RequestTask
+import java.io.ByteArrayOutputStream
 
 
 /**
@@ -277,7 +282,7 @@ class DynamicsConnector {
             return
         }
 
-        val envelop = EnvelopeEncoder(HeaderEncoder.execute(crmUrl, securityContent), BodyEncoder(ExecuteActionEncoder(RequestEncoder.multiple(fetchExpression))))
+        val envelop = EnvelopeEncoder(HeaderEncoder.execute(crmUrl, securityContent), BodyEncoder(ExecuteActionEncoder(RequestEncoder.multipleRetreive(fetchExpression))))
         val request = DynamicConnectorRequest(crmUrl, envelop)
         val retrieveMultipleDecoder = RetrieveMultipleDecoder(request)
 
@@ -295,6 +300,139 @@ class DynamicsConnector {
             }
             Log.d(TAG, retrieveMultipleResponse!!.results!!.entityName)
             done(retrieveMultipleResponse.results, null)
+        }).execute()
+    }
+
+    fun create(entity: EntityCollection.Entity, done: (String?, Errors?) -> Unit) {
+
+        val securityContent: Triple<String, String, String>
+
+        try {
+            securityContent = preExecutionCheck()
+        } catch (e: Exception) {
+            done(null, AuthenticationError.invalidSecurityToken)
+            return
+        }
+
+        val createdEntity = EntityCollection.Entity(entity.attribute,
+                "00000000-0000-0000-0000-000000000000", entity.logicalName)
+
+        val envelop = EnvelopeEncoder(HeaderEncoder.create(crmUrl, securityContent), BodyEncoder(Create(createdEntity)))
+        val request = DynamicConnectorRequest(crmUrl, envelop)
+        val createDecoder = CreateDecoder(request)
+
+        RequestTask<CreateDecoder>(createDecoder, { responseDecoder, responseError ->
+
+            if (responseError != null) {
+                if (responseError.error == AuthenticationError.invalidSecurityToken) {
+                    authenticator!!.clearSecurityToken()
+                    this@DynamicsConnector.create(entity, done)
+                } else {
+                    done(null, responseError.error)
+                }
+                return@RequestTask
+            }
+            done(responseDecoder!!.createResult, null)
+        }).execute()
+    }
+
+    fun update(entity: EntityCollection.Entity, done: (Boolean?, Errors?) -> Unit) {
+
+        val securityContent: Triple<String, String, String>
+
+        try {
+            securityContent = preExecutionCheck()
+        } catch (e: Exception) {
+            done(null, AuthenticationError.invalidSecurityToken)
+            return
+        }
+
+        val envelop = EnvelopeEncoder(HeaderEncoder.update(crmUrl, securityContent), BodyEncoder(Update(entity = entity)))
+        val request = DynamicConnectorRequest(crmUrl, envelop)
+        val stringDecoder = StringDecoder(request)
+
+        RequestTask<StringDecoder>(stringDecoder, { responseDecoder, responseError ->
+
+            if (responseError != null) {
+                if (responseError.error == AuthenticationError.invalidSecurityToken) {
+                    authenticator!!.clearSecurityToken()
+                    this@DynamicsConnector.update(entity, done)
+                } else {
+                    done(null, responseError.error)
+                }
+                return@RequestTask
+            }
+
+            done(!(responseDecoder!!.text!!.contains("<ErrorCode>-2147220960</ErrorCode>")
+                    || responseDecoder.text!!.contains("is missing prvAssignOrder privilege")
+                    || responseDecoder.text!!.contains("because it is read-only")
+                    || responseDecoder.text!!.contains("<ErrorCode>-2147220946</ErrorCode>")), null)
+        }).execute()
+    }
+
+    fun delete(entityName: String, entityId: String, done: (Boolean?, Errors?) -> Unit) {
+
+        val securityContent: Triple<String, String, String>
+
+        try {
+            securityContent = preExecutionCheck()
+        } catch (e: Exception) {
+            done(null, AuthenticationError.invalidSecurityToken)
+            return
+        }
+
+        val envelop = EnvelopeEncoder(HeaderEncoder.delete(crmUrl, securityContent), BodyEncoder(Delete(entityName, entityId)))
+        val request = DynamicConnectorRequest(crmUrl, envelop)
+        val stringDecoder = StringDecoder(request)
+
+        RequestTask<StringDecoder>(stringDecoder, { responseDecoder, responseError ->
+
+            if (responseError != null) {
+                if (responseError.error == AuthenticationError.invalidSecurityToken) {
+                    authenticator!!.clearSecurityToken()
+                    this@DynamicsConnector.delete(entityName, entityId, done)
+                } else {
+                    done(null, responseError.error)
+                }
+                return@RequestTask
+            }
+
+            done(responseDecoder!!.text!!.contains("<DeleteResponse"), null)
+
+        }).execute()
+    }
+
+    fun executeMultiple(actionRequests: ArrayList<ActionRequest>, done: (ArrayList<ExecuteMultipleResponseItem>?, Errors?) -> Unit) {
+
+        val securityContent: Triple<String, String, String>
+
+        try {
+            securityContent = preExecutionCheck()
+        } catch (e: Exception) {
+            done(null, AuthenticationError.invalidSecurityToken)
+            return
+        }
+
+        val envelop = EnvelopeEncoder(HeaderEncoder.execute(crmUrl, securityContent), BodyEncoder(ExecuteActionEncoder(RequestEncoder.multipleExecute(actionRequests))))
+        val request = DynamicConnectorRequest(crmUrl, envelop)
+        val executeMultipleDecoder = ExecuteMultipleDecoder(request)
+
+        RequestTask<ExecuteMultipleDecoder>(executeMultipleDecoder, { executeMultipleDecoder, responseError ->
+
+            if (responseError != null) {
+
+                if (responseError.error == AuthenticationError.invalidSecurityToken) {
+                    authenticator!!.clearSecurityToken()
+                    this@DynamicsConnector.executeMultiple(actionRequests, done)
+                } else {
+                    done(null, responseError.error)
+                }
+
+                return@RequestTask
+            }
+            Log.d(TAG, "size: " + executeMultipleDecoder!!.responseItems?.size)
+            done(executeMultipleDecoder!!.responseItems, null)
+
         }).execute()
     }
 
@@ -349,108 +487,6 @@ class DynamicsConnector {
             }
             Log.d(TAG, stringResponse!!.text)
             done(false, null)
-        }).execute()
-    }
-
-    //Create
-    fun create(entity: EntityCollection.Entity, done: (String?, Errors?) -> Unit) {
-
-        val securityContent: Triple<String, String, String>
-
-        try {
-            securityContent = preExecutionCheck()
-        } catch (e: Exception) {
-            done(null, AuthenticationError.invalidSecurityToken)
-            return
-        }
-
-        val createdEntity = EntityCollection.Entity(entity.attribute,
-                "00000000-0000-0000-0000-000000000000", entity.logicalName)
-
-        val envelop = EnvelopeEncoder(HeaderEncoder.create(crmUrl, securityContent), BodyEncoder(Create(createdEntity)))
-        val request = DynamicConnectorRequest(crmUrl, envelop)
-        val createDecoder = CreateDecoder(request)
-
-        RequestTask<CreateDecoder>(createDecoder, { responseDecoder, responseError ->
-
-            if (responseError != null) {
-                if (responseError.error == AuthenticationError.invalidSecurityToken) {
-                    authenticator!!.clearSecurityToken()
-                    this@DynamicsConnector.create(entity, done)
-                } else {
-                    done(null, responseError.error)
-                }
-                return@RequestTask
-            }
-            done(responseDecoder!!.createResult, null)
-        }).execute()
-    }
-
-    //Update
-    fun update(entity: EntityCollection.Entity, done: (Boolean?, Errors?) -> Unit) {
-
-        val securityContent: Triple<String, String, String>
-
-        try {
-            securityContent = preExecutionCheck()
-        } catch (e: Exception) {
-            done(null, AuthenticationError.invalidSecurityToken)
-            return
-        }
-
-        val envelop = EnvelopeEncoder(HeaderEncoder.update(crmUrl, securityContent), BodyEncoder(Update(entity = entity)))
-        val request = DynamicConnectorRequest(crmUrl, envelop)
-        val stringDecoder = StringDecoder(request)
-
-        RequestTask<StringDecoder>(stringDecoder, { responseDecoder, responseError ->
-
-            if (responseError != null) {
-                if (responseError.error == AuthenticationError.invalidSecurityToken) {
-                    authenticator!!.clearSecurityToken()
-                    this@DynamicsConnector.update(entity, done)
-                } else {
-                    done(null, responseError.error)
-                }
-                return@RequestTask
-            }
-
-            done(!(responseDecoder!!.text!!.contains("<ErrorCode>-2147220960</ErrorCode>")
-                    || responseDecoder.text!!.contains("is missing prvAssignOrder privilege")
-                    || responseDecoder.text!!.contains("because it is read-only")
-                    || responseDecoder.text!!.contains("<ErrorCode>-2147220946</ErrorCode>")), null)
-        }).execute()
-    }
-
-    //Delete
-    fun delete(entityName: String, entityId: String, done: (Boolean?, Errors?) -> Unit) {
-
-        val securityContent: Triple<String, String, String>
-
-        try {
-            securityContent = preExecutionCheck()
-        } catch (e: Exception) {
-            done(null, AuthenticationError.invalidSecurityToken)
-            return
-        }
-
-        val envelop = EnvelopeEncoder(HeaderEncoder.delete(crmUrl, securityContent), BodyEncoder(Delete(entityName, entityId)))
-        val request = DynamicConnectorRequest(crmUrl, envelop)
-        val stringDecoder = StringDecoder(request)
-
-        RequestTask<StringDecoder>(stringDecoder, { responseDecoder, responseError ->
-
-            if (responseError != null) {
-                if (responseError.error == AuthenticationError.invalidSecurityToken) {
-                    authenticator!!.clearSecurityToken()
-                    this@DynamicsConnector.delete(entityName, entityId, done)
-                } else {
-                    done(null, responseError.error)
-                }
-                return@RequestTask
-            }
-
-            done(responseDecoder!!.text!!.contains("<DeleteResponse"), null)
-
         }).execute()
     }
 

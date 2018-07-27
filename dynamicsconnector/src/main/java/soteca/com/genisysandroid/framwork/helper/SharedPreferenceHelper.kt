@@ -114,4 +114,33 @@ class SharedPreferenceHelper(ctx: Context) {
     fun deleteUserInformation() {
         prefs!!.edit().remove(USER_INFORMATION).apply()
     }
+
+    /*
+    * User Information
+    * */
+    fun setValues(key: String, values: HashMap<String, String>) {
+        val jsonObject = JSONObject(values)
+        val editor = prefs!!.edit()
+        editor.putString(key, jsonObject.toString())
+        editor.apply()
+    }
+
+    fun getValues(key: String): HashMap<String, String>? {
+        val jsonObjectString = prefs!!.getString(key, "")
+
+        if (jsonObjectString == "") {
+            return null
+        }
+
+        val jsonObject = JSONObject(jsonObjectString)
+        val values = HashMap<String, String>()
+        jsonObject.keys().forEach {
+            values[it] = jsonObject.getString(it)
+        }
+        return values
+    }
+
+    fun deleteValue(key: String) {
+        prefs!!.edit().remove(USER_INFORMATION).apply()
+    }
 }

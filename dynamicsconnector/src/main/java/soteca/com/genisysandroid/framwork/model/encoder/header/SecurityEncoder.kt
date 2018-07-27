@@ -22,23 +22,13 @@ class SecurityEncoder() {
     @field:Namespace(reference = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd", prefix = "o")
     private var usernameToken: UsernameToken? = null
 
-    @field:Element(name = "wsse:BinarySecurityToken", required = false)
-    private var binarySecurityToken: BinarySecurityToken? = null
-
     // Execute Request
     constructor(encryptedData: EncryptedData) : this() {
         this.encryptedData = encryptedData
     }
 
-    //Get Device Token
     constructor(usernameToken: UsernameToken) : this() {
         this.usernameToken = usernameToken
-    }
-
-    //Get Security Token
-    constructor(usernameToken: UsernameToken, deviceToken: String) : this() {
-        this.usernameToken = usernameToken
-        this.binarySecurityToken = BinarySecurityToken(deviceToken)
     }
 
     @Root(name = "Timestamp")

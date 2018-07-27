@@ -50,10 +50,17 @@ class DynamicAuthenticator : Authenticator {
     }
 
     override fun setConfiguration(configuration: DynamicsConfiguration) {
-        Token.removeFromStorage(context)
-        token = null
 
-        DynamicsConfiguration.removeFromStorage(context)
+        val existConfig = DynamicsConfiguration.initFromSave(context)
+        existConfig?.let {
+
+            if (!it.isSameConfiguration(configuration)) {
+                Token.removeFromStorage(context)
+                token = null
+
+                DynamicsConfiguration.removeFromStorage(context)
+            }
+        }
         _configuration = configuration
     }
 
@@ -77,11 +84,8 @@ class DynamicAuthenticator : Authenticator {
             return content
         }
 
-        val deviceToken = getDeviceToken()
-                ?: throw AuthenticationError.failedDeviceTokenAcquisition.error
-
         try {
-            token = getSecurityDetail(deviceToken)
+            token = getSecurityDetail()
         } catch (e: Exception) {
             Log.d(TAG, "authenticate: " + e.localizedMessage)
             throw e
@@ -93,10 +97,10 @@ class DynamicAuthenticator : Authenticator {
         return token!!.content!!
     }
 
-    private fun getSecurityDetail(deviceToken: String): Token? {
+    private fun getSecurityDetail(): Token? {
 
         val accessTokenDetail: Token?
-        val envelop = EnvelopeEncoder(HeaderEncoder.getSecurityToken("https://login.microsoftonline.com/liveidSTS.srf", _configuration!!, deviceToken), BodyEncoder(RequestSecurityTokenEncoder.securityToken(_configuration!!.urnAddress)))//crmemea
+        val envelop = EnvelopeEncoder(HeaderEncoder.getSecurityToken("https://login.microsoftonline.com/liveidSTS.srf", _configuration!!), BodyEncoder(RequestSecurityTokenEncoder.securityToken(_configuration!!.urnAddress)))//crmemea
         val request = AuthenticatorRequest(_configuration!!.loginHost, envelop, AuthenticatorRequest.Type.securityTokenAcquisition)
         val tokenDecoder = TokenDecoder(request)
 
@@ -110,61 +114,6 @@ class DynamicAuthenticator : Authenticator {
         Log.d(TAG, "accessTokenDetail: " + accessTokenDetail)
 
         return accessTokenDetail
-    }
-
-    private fun getDeviceToken(): String? {
-
-        fun getDeviceToken(credential: HashMap<String, String>): String? {
-
-            var token = ""
-            val envelop = EnvelopeEncoder(HeaderEncoder.getDeviceToken("https://login.microsoftonline.com/liveidSTS.srf", credential), BodyEncoder(RequestSecurityTokenEncoder.deviceToken("http://passport.net/tb")))
-            val request = AuthenticatorRequest(_configuration!!.loginHost, envelop, AuthenticatorRequest.Type.deviceTokenAcquisition)
-            val deviceTokenDecoder = DeviceTokenDecoder(request)
-
-            val result = RequestTask<DeviceTokenDecoder>(deviceTokenDecoder).execute().get()
-
-            try {
-                if (result.second != null) {
-                    Log.e(TAG, "response: " + result.second!!.error!!.error.localizedMessage)
-                    return ""
-                }
-
-                token = result.first!!.deviceToken!!
-
-            } catch (e: Exception) {
-                Log.e(TAG, "json: " + e.localizedMessage)
-            }
-
-            return token
-        }
-
-        fun registerDevice(): HashMap<String, String>? {
-            val calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-            val timeInterval = calendar.timeInMillis / 1000L
-
-            var deviceCredential: HashMap<String, String>? = hashMapOf(
-                    "deviceName" to "${timeInterval}2u91rlobl7lvkihb",
-                    "devicePassword" to "GRB+WGz`eCkr-k${timeInterval}")
-
-            val deviceAddRequestEncoder = DeviceAddRequestEncoder(deviceCredential)
-            val request = AuthenticatorRequest(_configuration!!.loginHost, deviceAddRequestEncoder, AuthenticatorRequest.Type.deviceRegistration)
-            val registerDeviceDecoder = StringDecoder(request)
-
-            val result = RequestTask<StringDecoder>(registerDeviceDecoder).execute().get()
-
-            if (result.second != null) {
-                deviceCredential = null
-            }
-
-            return deviceCredential!!
-        }
-
-        val deviceCredential = registerDevice()
-
-        if (deviceCredential != null) {
-            return getDeviceToken(deviceCredential)
-        }
-        return null
     }
 
     class Token() {
@@ -189,6 +138,11 @@ class DynamicAuthenticator : Authenticator {
                     return null
                 }
 
+                val a = tokenFromStorage["FIRST_TOKEN"]!!
+                val b = tokenFromStorage["SECOND_TOKEN"]!!
+                val c = tokenFromStorage["KEY_IDENTIFIER"]!!
+                val d = expirationDate
+
                 return Token(tokenFromStorage["FIRST_TOKEN"]!!, tokenFromStorage["SECOND_TOKEN"]!!, tokenFromStorage["KEY_IDENTIFIER"]!!, expirationDate)
             }
         }
@@ -206,8 +160,8 @@ class DynamicAuthenticator : Authenticator {
                 if (expirationDate == null) {
                     return null
                 }
-//                Log.d("tExpire", "expirationDate: ${expirationDate!!}")
-//                Log.d("tExpire", "NOW: ${Date()}")
+                Log.d("tExpire", "expirationDate: ${expirationDate!!}")
+                Log.d("tExpire", "NOW: ${Date()}")
 
                 if (expirationDate!!.time > Date().time) {
                     return Triple(firstToken, secondToken, keyIdentifier)

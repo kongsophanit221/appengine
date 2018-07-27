@@ -23,7 +23,7 @@ open class Order : BaseItem {
         this.name = name
     }
 
-    constructor(id: String, name: String) : this(name){
+    constructor(id: String, name: String) : this(name) {
         this.id = id
     }
 
@@ -52,11 +52,16 @@ open class Order : BaseItem {
             return EntityReference(id = id, logicalName = "idcrm_posorder")
         }
 
-    open val keyValuePair: EntityCollection.Attribute?
+    open val keyValuePairs: EntityCollection.Attribute?
         get() {
             val attr = EntityCollection.Attribute(arrayListOf())
             attr["idcrm_name"] = EntityCollection.ValueType.string(name)
             return attr
+        }
+
+    var orderItemCount: Int = 0
+        get() {
+            return orderItems.count()
         }
 
 }
