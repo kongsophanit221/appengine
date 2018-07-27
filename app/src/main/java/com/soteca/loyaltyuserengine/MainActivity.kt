@@ -7,6 +7,9 @@ import android.util.Log
 import com.soteca.loyaltyuserengine.api.WebConfig
 import com.soteca.loyaltyuserengine.app.AppAuthenticator
 import com.soteca.loyaltyuserengine.app.Datasource
+import com.soteca.loyaltyuserengine.model.CartOrder
+import com.soteca.loyaltyuserengine.model.Order
+import com.soteca.loyaltyuserengine.model.SingleProduct
 import soteca.com.genisysandroid.framwork.connector.DynamicsConfiguration
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 import java.util.*
@@ -21,18 +24,31 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
 
-//        val connector = DynamicsConnector.default(this)
-//        val con = DynamicsConfiguration(DynamicsConfiguration.DynamicsConnectionType.office365,
-//                WebConfig.shared().CRM_URL,
-//                WebConfig.shared().USER_NAME,
-//                WebConfig.shared().PASSWORD)
-//        connector.authenticate(con) { u, e ->
-//
-//            Datasource.shared(this).getCategaries { arrayList, errors ->
+        val connector = DynamicsConnector.default(this)
+        val con = DynamicsConfiguration(DynamicsConfiguration.DynamicsConnectionType.office365,
+                WebConfig.shared().CRM_URL,
+                WebConfig.shared().USER_NAME,
+                WebConfig.shared().PASSWORD)
+        connector.authenticate(con) { u, e ->
+
+            //            Datasource.shared(this).getCategaries { arrayList, errors ->
 //
 //            }
+            Datasource.shared(this).getProductsComplete { products, errors ->
+
+                val cartOrder = CartOrder.shared()
+                Datasource.shared(this).addOrderLineToCartOrder(cartOrder!!, products!![3], 3.0, handler = { cartItem, error ->
+
+                })
+
+//                products!!.forEach {
 //
-//        }
+//                    val items = Datasource.shared(this).createCartItem(it.clone(), 5.0)
+//                    Log.d(TAG,"size:" + items.size)
+//                }
+            }
+
+        }
 
 
 //        val con = DynamicsConfiguration(DynamicsConfiguration.DynamicsConnectionType.office365,
@@ -47,22 +63,22 @@ class MainActivity : AppCompatActivity() {
 //            authenticate.saveToStorage()
 //        })
 
-        val param: HashMap<String, String> = hashMapOf(
-                "emailaddress1" to "measna@haricrm.com",
-                "idcrm_password" to "123456",
-                "firstname" to "measna",
-                "lastname" to "ly",
-                "mobilephone" to "093943030",
-                "birthdate" to "1999-08-08T00:00:00Z",
-                "idcrm_companycode" to "300"
-        )
-        Datasource.shared(this).register(param, { isSuccess, message ->
-
-            if (!isSuccess) {
-                Log.d(TAG, "message: " + message)
-            }
-            Log.d(TAG, "success")
-        })
+//        val param: HashMap<String, String> = hashMapOf(
+//                "emailaddress1" to "measna@haricrm.com",
+//                "idcrm_password" to "123456",
+//                "firstname" to "measna",
+//                "lastname" to "ly",
+//                "mobilephone" to "093943030",
+//                "birthdate" to "1999-08-08T00:00:00Z",
+//                "idcrm_companycode" to "300"
+//        )
+//        Datasource.shared(this).register(param, { isSuccess, message ->
+//
+//            if (!isSuccess) {
+//                Log.d(TAG, "message: " + message)
+//            }
+//            Log.d(TAG, "success")
+//        })
 //
 //        Log.d(TAG,"time: " + SystemClock.elapsedRealtime())
 //        Log.d(TAG,"time: " + System.currentTimeMillis())

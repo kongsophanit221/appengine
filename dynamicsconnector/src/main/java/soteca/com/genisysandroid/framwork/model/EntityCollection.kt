@@ -226,7 +226,7 @@ data class EntityCollection(
 
                     is EntityCollection.ValueType.int -> {
                         node!!.namespaces.setReference("http://www.w3.org/2001/XMLSchema", "d")
-                        node.setAttribute("i:type", Type.ENTITY_COLLECTION.value)
+                        node.setAttribute("i:type", Type.INT.value)
                         node.value = (it.value as ValueType.int).value.toString()
                     }
 

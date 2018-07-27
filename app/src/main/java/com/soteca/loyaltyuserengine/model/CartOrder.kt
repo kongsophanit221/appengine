@@ -23,6 +23,10 @@ class CartOrder : Order {
         _shared = this
     }
 
+    constructor(id: String, name: String = "") : super(id, name) {
+        _shared = this
+    }
+
     override var totalTax: Double = 0.0
         get() {
             return orderItems.sumByDouble { it.tax }
@@ -53,11 +57,11 @@ class CartOrder : Order {
         orderItems = ArrayList()
     }
 
-    fun addCart(cartItem: CartItem) {
-        orderItems.add(cartItem)
+    fun addCart(orderLine: OrderLine) {
+        orderItems.add(orderLine)
     }
 
-    fun removeCart(cartItem: CartItem) {
-        orderItems.remove(cartItem)
+    fun removeCart(orderLine: OrderLine) {
+        orderItems.remove(orderLine)
     }
 }

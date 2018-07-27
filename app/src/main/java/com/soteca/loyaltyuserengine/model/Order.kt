@@ -13,10 +13,10 @@ open class Order : BaseItem {
     open var totalItemAmount: Double = 0.0
     open var totalAmount: Double = 0.0
     open var venue: EntityReference? = null
-    open var name: String = ""
+    open var name: String? = null
     open var requestDeliverDate: Date? = null
 
-    open var orderItems: ArrayList<CartItem> = ArrayList()
+    open var orderItems: ArrayList<OrderLine> = ArrayList()
 
     constructor()
 
@@ -32,12 +32,30 @@ open class Order : BaseItem {
         this.requestDeliverDate = attribute!!["idcrm_requesteddeliverydate"]?.associatedValue as? Date
     }
 
-    open fun addExistCartItems(cartItems: ArrayList<CartItem>) {
-        orderItems.addAll(cartItems)
+    constructor(id: String = "", name: String? = null) {
+        this.id = id
+        this.name = name
+    }
+
+    open fun addExistCartItems(orderLines: ArrayList<OrderLine>) {
+        orderItems.addAll(orderLines)
     }
 
     override fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
         return Order(attribute)
     }
 
+    val entityReference: EntityReference
+        get() {
+            return EntityReference(id = id, logicalName = "idcrm_posorder")
+        }
+
+    override val attribute: EntityCollection.Attribute
+        get() {
+            val attr = EntityCollection.Attribute(arrayListOf())
+            name?.let {
+                attr["idcrm_name"] = EntityCollection.ValueType.string(it)
+            }
+            return attr
+        }
 }

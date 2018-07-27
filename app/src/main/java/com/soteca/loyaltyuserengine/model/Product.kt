@@ -41,7 +41,7 @@ open class Product : BaseItem {
 
     open fun addOnComponent(product: AuxiliaryProduct) {}
 
-    override val attributePush: EntityCollection.Attribute?
+    override val attribute: EntityCollection.Attribute?
         get() {
             val attr = EntityCollection.Attribute()
             attr["idcrm_posproductid"] = EntityCollection.ValueType.string(id)
@@ -60,5 +60,9 @@ open class Product : BaseItem {
         } else {
             return AuxiliaryProduct(attribute!!)
         }
+    }
+
+    open fun clone(newProduct: Product? = null): Product {
+        return newProduct!!
     }
 }

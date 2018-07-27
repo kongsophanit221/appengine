@@ -288,7 +288,7 @@ class FetchExpression(
         @field:Attribute(name = "uitype", required = false)
         private var uiTypeAttr: String? = null
 
-        constructor(attribute: String? = null, `operator`: Operator? = null, value: String? = null, values: List<String>? = null) : this() {
+        constructor(attribute: String? = null, `operator`: Operator? = null, value: String? = null, values: ArrayList<String>? = null) : this() {
             this.attribute = attribute
             this.operator = `operator`?.let { it.value }
 
