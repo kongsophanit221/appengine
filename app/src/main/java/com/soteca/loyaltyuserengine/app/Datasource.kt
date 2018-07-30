@@ -1,7 +1,6 @@
 package com.soteca.loyaltyuserengine.app
 
 import android.content.Context
-import android.content.SharedPreferences
 import com.soteca.loyaltyuserengine.api.WebConfig
 import com.soteca.loyaltyuserengine.model.*
 import com.soteca.loyaltyuserengine.model.Annotation
@@ -10,7 +9,6 @@ import com.soteca.loyaltyuserengine.util.SharedPreferenceUtils
 import com.soteca.loyaltyuserengine.util.getSafeString
 import org.json.JSONObject
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
-import soteca.com.genisysandroid.framwork.helper.crmFormatToDate
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
 import soteca.com.genisysandroid.framwork.model.FetchExpression
@@ -403,7 +401,7 @@ class Datasource {
         }
 
         val attribute = order.attribute
-//        attribute["statecode"] = EntityCollection.ValueType.entityReference(EntityReference(customerId, "contact"))
+        attribute["idcrm_customerid"] = EntityCollection.ValueType.entityReference(EntityReference(customerId, "contact"))
         attribute["statecode"] = EntityCollection.ValueType.optionSetValue(StateCode.ACTIVE.value)
         attribute["statuscode"] = EntityCollection.ValueType.optionSetValue(StatusReason.OPEN.value)
 
