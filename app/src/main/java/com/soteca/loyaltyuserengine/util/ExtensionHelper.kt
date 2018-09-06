@@ -14,7 +14,7 @@ enum class ImageScaleType {
 
         val density = Resources.getSystem().displayMetrics.density
 
-        return when (this) {
+        when (this) {
             ImageScaleType.SMALL -> return "small_${density.screenScale()}"
             ImageScaleType.MEDIUM -> return "medium_${density.screenScale()}"
         }
@@ -23,8 +23,8 @@ enum class ImageScaleType {
 
 fun Float.screenScale(): Int {
     return when (this) {
-        in 0.0..1.5 -> return 1
-        in 1.5..2.5 -> return 2
+        in 0.0..1.0 -> return 1
+        in 1.1..2.5 -> return 2
         else -> 3
     }
 }
@@ -43,5 +43,17 @@ fun JSONObject.getSafeString(key: String): String {
     } catch (e: Exception) {
         e.printStackTrace()
         return ""
+    }
+}
+
+/**
+ * Double
+ */
+
+fun Double.toStringDisplay(): String {
+    if ((this == Math.floor(this)) && !this.isInfinite()) {
+        return String.format("%.0f", this)
+    } else {
+        return String.format("%.2f", this)
     }
 }

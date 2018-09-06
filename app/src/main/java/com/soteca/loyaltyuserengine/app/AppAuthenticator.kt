@@ -1,9 +1,14 @@
 package com.soteca.loyaltyuserengine.app
 
 import android.content.Context
-import com.soteca.loyaltyuserengine.api.WebConfig
+import com.soteca.loyaltyuserengine.api.WebAPI
+import com.soteca.loyaltyuserengine.model.Contact
+import com.soteca.loyaltyuserengine.model.User
+import com.soteca.loyaltyuserengine.util.SharedPreferenceUtils
+import com.soteca.loyaltyuserengine.util.getSafeString
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.runBlocking
+import org.json.JSONObject
 import soteca.com.genisysandroid.framwork.authenticator.Authenticator
 import soteca.com.genisysandroid.framwork.connector.DynamicsConfiguration
 import soteca.com.genisysandroid.framwork.helper.SharedPreferenceHelper
@@ -13,14 +18,14 @@ class AppAuthenticator : Authenticator {
 
     private val KEY = "APP_AUTH"
 
-    private lateinit var configuration: DynamicsConfiguration
+    private var configuration: DynamicsConfiguration? = null
     lateinit var context: Context
-    private var email: String = ""
-    private var password: String = ""
+    var email: String = ""
+    var password: String = ""
     private var token: AppToken? = null
 
     override val crmUrl: String
-        get() = WebConfig.shared().CRM_URL
+        get() = WebAPI.CRM_URL
 
     companion object {
 
@@ -28,7 +33,7 @@ class AppAuthenticator : Authenticator {
             val auth = AppAuthenticator(context)
             auth.getInfoFromStorage()
 
-            if (auth.token == null && auth.email == "" && auth.password == "") {
+            if (auth.email == "" && auth.password == "") {
                 return null
             }
             return auth
@@ -69,21 +74,22 @@ class AppAuthenticator : Authenticator {
     }
 
     override fun clearConfiguration() {
-
+        configuration = null
+        DynamicsConfiguration.removeFromStorage(context)
     }
 
     override fun clearSecurityToken() {
         token = null
-        AppToken.removeFromStorage(context)
+        delete()
     }
 
 
     private fun retrievedToken(): AppToken? = runBlocking {
 
         async {
-            val param = hashMapOf("emailaddress1" to email, "idcrm_password" to password)
+            val param = hashMapOf("emailaddress1" to email, "password" to password)
 
-            val result = Datasource.shared(this@AppAuthenticator.context).login(param)
+            val result = login(this@AppAuthenticator.context, param)
 
             if (result.second != null) {
                 null
@@ -125,5 +131,20 @@ class AppAuthenticator : Authenticator {
         }
 
         return true
+    }
+
+    private fun login(context: Context, param: HashMap<String, String>?): Pair<AppToken?, String?> {
+
+        val request = AppRequestData(WebAPI.LOGIN_URL, param)
+
+        val result = AppRequestTask(request).execute().get()
+
+        if (result.isError()) {
+            return null to result.message
+        }
+
+        User.updateAuth(context, result.data)
+
+        return AppToken(result.data) to null
     }
 }

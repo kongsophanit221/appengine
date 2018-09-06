@@ -10,6 +10,10 @@ class OrderLine : BaseItem {
 
     var id: String = ""
     var quantity: Double = 0.0
+        set(value) {
+            field = value
+            amount = pricePerUnit * value
+        }
     var name: String? = null
     var tax: Double = 0.0
     var discountAmount: Double = 0.0
@@ -19,39 +23,45 @@ class OrderLine : BaseItem {
     var orderReference: EntityReference? = null
     var productReference: EntityReference? = null
     var product: Product? = null
+    var orderLinesChild: ArrayList<OrderLine> = ArrayList()
+
+    val totalPrice: Double
+        get() {
+            return amount + orderLinesChild.sumByDouble { it.amount }
+        }
 
     constructor()
 
     constructor(attribute: EntityCollection.Attribute) : super(attribute) {
 
-        if (attribute["idcrm_productid"]!!.associatedValue is AliasedType) {
-            this.productReference = (attribute!!["idcrm_productid"]!!.associatedValue as AliasedType).value.associatedValue as EntityReference
+        if (attribute["idcrm_posorderlineid"]!!.associatedValue is AliasedType) {
+            this.productReference = (attribute["idcrm_productid"]!!.associatedValue as AliasedType).value.associatedValue as EntityReference
             this.id = (attribute["idcrm_posorderlineid"]!!.associatedValue as AliasedType).value.associatedValue.toString()
-            this.quantity = (attribute["idcrm_quantity"]!!.associatedValue as AliasedType).value.associatedValue as Double
+            this.quantity = (attribute["idcrm_quantity"]?.associatedValue as AliasedType).value.associatedValue as Double
             this.lineNumber = (attribute["idcrm_lineitemnumber"]!!.associatedValue as AliasedType).value.associatedValue as Int
             this.name = attribute["idcrm_name"]?.let { (it.associatedValue as AliasedType).value.associatedValue.toString() }
-            this.tax = attribute["idcrm_tax"]?.let { (it.associatedValue as AliasedType).value.associatedValue as Double } ?: 0.0
-            this.discountAmount = attribute["idcrm_discountamount"]?.let { (it.associatedValue as AliasedType).value.associatedValue as Double } ?: 0.0
+            this.tax = 0.0//attribute["idcrm_tax"]?.let { (it.associatedValue as AliasedType).value.associatedValue as Double } ?: 0.0
+            this.discountAmount = 0.0//attribute["idcrm_discountamount"]?.let { (it.associatedValue as AliasedType).value.associatedValue as Double } ?: 0.0
             this.pricePerUnit = attribute["idcrm_priceperunit"]?.let { (it.associatedValue as AliasedType).value.associatedValue as Double } ?: 0.0
             this.amount = attribute["idcrm_amount"]?.let { (it.associatedValue as AliasedType).value.associatedValue as Double } ?: 0.0
-            this.orderReference = (attribute!!["idcrm_order"]!!.associatedValue as AliasedType).value.associatedValue as EntityReference
+            this.orderReference = (attribute["idcrm_order"]!!.associatedValue as AliasedType).value.associatedValue as EntityReference
 
         } else {
-            this.productReference = attribute!!["idcrm_productid"]!!.associatedValue as EntityReference
-            this.id = attribute!!["idcrm_posorderlineid"]!!.associatedValue.toString()
-            this.quantity = attribute!!["idcrm_quantity"]!!.associatedValue as Double
-            this.lineNumber = attribute!!["idcrm_lineitemnumber"]!!.associatedValue as Int
-            this.name = attribute!!["idcrm_name"]?.let { it.associatedValue.toString() }
-            this.tax = attribute!!["idcrm_tax"]?.let { it.associatedValue as Double } ?: 0.0
-            this.discountAmount = attribute!!["idcrm_discountamount"]?.let { it.associatedValue as Double } ?: 0.0
-            this.pricePerUnit = attribute!!["idcrm_priceperunit"]!!.associatedValue as Double
-            this.amount = attribute!!["idcrm_amount"]!!.associatedValue as Double
-            this.orderReference = attribute!!["idcrm_order"]!!.associatedValue as EntityReference
+            this.productReference = attribute["idcrm_productid"]!!.associatedValue as EntityReference
+            this.id = attribute["idcrm_posorderlineid"]!!.associatedValue.toString()
+            this.quantity = attribute["idcrm_quantity"]!!.associatedValue as Double
+            this.lineNumber = attribute["idcrm_lineitemnumber"]!!.associatedValue as Int
+            this.name = attribute["idcrm_name"]?.let { it.associatedValue.toString() }
+            this.tax = 0.0//attribute!!["idcrm_tax"]?.let { it.associatedValue as Double } ?: 0.0
+            this.discountAmount = 0.0//attribute!!["idcrm_discountamount"]?.let { it.associatedValue as Double } ?: 0.0
+            this.pricePerUnit = attribute["idcrm_priceperunit"]!!.associatedValue as Double
+            this.amount = attribute["idcrm_amount"]!!.associatedValue as Double
+            this.orderReference = attribute["idcrm_order"]!!.associatedValue as EntityReference
         }
-        this.product = Datasource.productsGlobal.find { this.productReference!!.id == it.id }
+        this.product = Datasource.productsGlobal.find { this.productReference!!.id == it.id }?.clone()
     }
 
-    constructor(product: Product, quantity: Double, orderReference: EntityReference? = null, lineNumber: Int = 0, discount: Double = 0.0, tax: Double = 0.0) : this() {
+    constructor(product: Product, quantity: Double, cartOrder: CartOrder, lineNumber: Int = 0, discount: Double = 0.0, tax: Double = 0.0) : this() {
         this.product = product
         this.productReference = product.entityReference
         this.quantity = quantity
@@ -61,9 +71,7 @@ class OrderLine : BaseItem {
         this.tax = amount * tax //the calculate of tax if discount amount or amount
         this.lineNumber = lineNumber
 
-        orderReference?.let {
-            this.orderReference = it
-        }
+        this.orderReference = cartOrder.entityReference
     }
 
     override fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
@@ -83,17 +91,35 @@ class OrderLine : BaseItem {
             if (id != "")
                 attr["idcrm_posorderlineid"] = EntityCollection.ValueType.guid(id)
 
-            orderReference?.let { attr["idcrm_order"] = EntityCollection.ValueType.entityReference(it) }
+            orderReference?.let { attr["idcrm_order"] = EntityCollection.ValueType.entityReference(it, true) }
             name?.let { attr["idcrm_name"] = EntityCollection.ValueType.string(it) }
-            productReference?.let { attr["idcrm_productid"] = EntityCollection.ValueType.entityReference(it) }
+            productReference?.let { attr["idcrm_productid"] = EntityCollection.ValueType.entityReference(it, true) }
 
-            attr["idcrm_priceperunit"] = EntityCollection.ValueType.decimal(pricePerUnit)
+            attr["idcrm_priceperunit"] = EntityCollection.ValueType.money(pricePerUnit, true)
             attr["idcrm_quantity"] = EntityCollection.ValueType.decimal(quantity)
-            attr["idcrm_amount"] = EntityCollection.ValueType.decimal(amount)
-            attr["idcrm_tax"] = EntityCollection.ValueType.decimal(tax)
-            attr["idcrm_discountamount"] = EntityCollection.ValueType.decimal(discountAmount)
+            attr["idcrm_amount"] = EntityCollection.ValueType.money(amount, true)
+            attr["idcrm_tax"] = EntityCollection.ValueType.money(tax, true)
+            attr["idcrm_discountamount"] = EntityCollection.ValueType.money(discountAmount, true)
             attr["idcrm_lineitemnumber"] = EntityCollection.ValueType.int(lineNumber)
 
             return attr
         }
+
+    fun autoPairOrderLineSelect() {
+
+        when (product) {
+
+            is BundleProduct -> {
+                orderLinesChild.forEach { orderLine ->
+                    (product as BundleProduct).auxiliaryProducts.filter { it.id == orderLine.product?.id }.forEach { it.isSelect = true }
+                }
+            }
+
+            is SingleProduct -> {
+                orderLinesChild.forEach { orderLine ->
+                    (product as SingleProduct).auxiliaryProducts.filter { it.id == orderLine.product?.id }.forEach { it.isSelect = true }
+                }
+            }
+        }
+    }
 }

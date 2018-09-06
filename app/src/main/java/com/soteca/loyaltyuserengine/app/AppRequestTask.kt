@@ -19,21 +19,28 @@ class AppRequestTask(val request: Request, val done: ((result: AppResponseData) 
     override fun doInBackground(vararg params: String?): AppResponseData {
         var inputStream: InputStream? = null
 
-        connection = request!!.requestUrl.openConnection() as HttpURLConnection
-        connection!!.requestMethod = request!!.httpMethod.value
-        connection!!.connectTimeout = request!!.timeout
-        connection!!.doOutput = true
+        connection = request.requestUrl.openConnection() as HttpURLConnection
+        connection!!.requestMethod = request.httpMethod.value
+        connection!!.connectTimeout = request.timeout
         connection!!.useCaches = false
 
-        val postData: ByteArray = request!!.parameter!!
-        val content = postData.toString(Charsets.UTF_8)
-        for ((key, value) in request!!.header) {
+        if (request.httpMethod == Request.HTTPMethod.post) {
+            connection!!.doOutput = true
+        }
+
+        for ((key, value) in request.header) {
             connection!!.setRequestProperty(key, value)
         }
         try {
-            val outputStream = connection!!.outputStream
-            outputStream.write(postData)
-            outputStream.flush()
+            if (request.httpMethod != Request.HTTPMethod.get) {
+                val postData: ByteArray = request.parameter!!
+                val content = postData.toString(Charsets.UTF_8)
+                val outputStream = connection!!.outputStream
+                outputStream.write(postData)
+                outputStream.flush()
+            } else {
+                connection!!.connect()
+            }
 
             if (connection!!.responseCode != HttpURLConnection.HTTP_OK && connection!!.responseCode != HttpURLConnection.HTTP_CREATED) {
                 inputStream = connection!!.errorStream

@@ -4,13 +4,9 @@ import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.runBlocking
-import org.simpleframework.xml.convert.AnnotationStrategy
-import org.simpleframework.xml.core.Persister
-import org.simpleframework.xml.stream.Format
 import soteca.com.genisysandroid.framwork.authenticator.Authenticator
 import soteca.com.genisysandroid.framwork.authenticator.DynamicAuthenticator
 import soteca.com.genisysandroid.framwork.helper.SharedPreferenceHelper
-import soteca.com.genisysandroid.framwork.helper.decodeSpecialCharacter
 import soteca.com.genisysandroid.framwork.model.*
 import soteca.com.genisysandroid.framwork.model.decoder.*
 import soteca.com.genisysandroid.framwork.model.encoder.EnvelopeEncoder
@@ -19,7 +15,6 @@ import soteca.com.genisysandroid.framwork.model.encoder.header.HeaderEncoder
 import soteca.com.genisysandroid.framwork.networking.AuthenticationError
 import soteca.com.genisysandroid.framwork.networking.Errors
 import soteca.com.genisysandroid.framwork.networking.RequestTask
-import java.io.ByteArrayOutputStream
 
 
 /**
@@ -49,7 +44,6 @@ class DynamicsConnector {
     constructor(context: Context, authenticator: Authenticator) {
         this.context = context
         this.authenticator = authenticator
-        DynamicsConnector.shared = this
     }
 
     private fun preExecutionCheck(): Triple<String, String, String> = runBlocking {
@@ -105,7 +99,7 @@ class DynamicsConnector {
 
         } catch (ex: Exception) {
             Log.d(TAG, "ex: " + ex.localizedMessage)
-            done(null, null)
+            done(null, AuthenticationError.invalidSecurityToken)
             return
         }
 
@@ -278,7 +272,10 @@ class DynamicsConnector {
         try {
             securityContent = preExecutionCheck()
         } catch (e: Exception) {
+            authenticator!!.clearSecurityToken()
+            this@DynamicsConnector.retrieveMultiple(fetchExpression, done)
             done(null, AuthenticationError.invalidSecurityToken)
+
             return
         }
 
@@ -287,6 +284,7 @@ class DynamicsConnector {
         val retrieveMultipleDecoder = RetrieveMultipleDecoder(request)
 
         RequestTask<RetrieveMultipleDecoder>(retrieveMultipleDecoder, { retrieveMultipleResponse, responseError ->
+
             if (responseError != null) {
 
                 if (responseError.error == AuthenticationError.invalidSecurityToken) {

@@ -7,17 +7,23 @@ class AppResponseData() {
 
     private var code: String = ""
     var message: String = ""
+    var timestamp: String = ""
     var data: String = ""
 
     constructor(data: String?) : this() {
 
         if (data != null) {
-            val jsonObject = JSONObject(data)
-            this.code = jsonObject.getSafeString("code")
-            this.message = jsonObject.getSafeString("message")
 
-            if (!jsonObject.isNull("data")) {
-                this.data = jsonObject.getJSONObject("data").getSafeString("session")
+            try {
+                val jsonObject = JSONObject(data).getJSONObject("message")
+                this.code = jsonObject.getSafeString("ErrorCode")
+                this.message = jsonObject.getSafeString("Message")
+                this.timestamp = jsonObject.getSafeString("Timestamp")
+                this.data = data
+
+            } catch (e: Exception) {
+                this.code = "1"
+                this.message = data
             }
         }
     }

@@ -1,18 +1,12 @@
 package com.soteca.loyaltyuserengine
 
 import android.os.Bundle
-import android.os.SystemClock
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
-import com.soteca.loyaltyuserengine.api.WebConfig
-import com.soteca.loyaltyuserengine.app.AppAuthenticator
+import com.soteca.loyaltyuserengine.api.WebAPI
 import com.soteca.loyaltyuserengine.app.Datasource
 import com.soteca.loyaltyuserengine.model.CartOrder
-import com.soteca.loyaltyuserengine.model.Order
-import com.soteca.loyaltyuserengine.model.SingleProduct
 import soteca.com.genisysandroid.framwork.connector.DynamicsConfiguration
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
-import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -24,37 +18,37 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
 
-        val connector = DynamicsConnector.default(this)
-        val con = DynamicsConfiguration(DynamicsConfiguration.DynamicsConnectionType.office365,
-                WebConfig.shared().CRM_URL,
-                WebConfig.shared().USER_NAME,
-                WebConfig.shared().PASSWORD)
-        connector.authenticate(con) { u, e ->
+//        val connector = DynamicsConnector.default(this)
+//        val con = DynamicsConfiguration(DynamicsConfiguration.DynamicsConnectionType.office365,
+//                WebAPI.shared().CRM_URL,
+//                WebAPI.shared().USER_NAME,
+//                WebAPI.shared().PASSWORD)
+//        connector.authenticate(con) { u, e ->
 
             //            Datasource.shared(this).getCategaries { arrayList, errors ->
 //
 //            }
-            Datasource.shared(this).getProductsComplete { products, errors ->
-
-                val cartOrder = CartOrder.shared()
-                Datasource.shared(this).addOrderLineToCartOrder(cartOrder!!, products!![3], 3.0, handler = { cartItem, error ->
-
-                })
-
-//                products!!.forEach {
+//            Datasource.shared(this).getProductsComplete { products, errors ->
 //
-//                    val items = Datasource.shared(this).createCartItem(it.clone(), 5.0)
-//                    Log.d(TAG,"size:" + items.size)
-//                }
-            }
+//                val cartOrder = CartOrder.shared()
+//                Datasource.shared(this).addOrderLineToCartOrder(cartOrder!!, products!![3], 3.0, handler = { cartItem, error ->
+//
+//                })
+//
+////                products!!.forEach {
+////
+////                    val items = Datasource.shared(this).createCartItem(it.clone(), 5.0)
+////                    Log.d(TAG,"size:" + items.size)
+////                }
+//            }
 
-        }
+//        }
 
 
 //        val con = DynamicsConfiguration(DynamicsConfiguration.DynamicsConnectionType.office365,
-//                WebConfig.shared().CRM_URL,
-//                WebConfig.shared().USER_NAME,
-//                WebConfig.shared().PASSWORD)
+//                WebAPI.shared().CRM_URL,
+//                WebAPI.shared().USER_NAME,
+//                WebAPI.shared().PASSWORD)
 //        val authenticate = AppAuthenticator(this, "measna@haricrm.com", "123456")
 //
 //        val connector = DynamicsConnector(this, authenticate)

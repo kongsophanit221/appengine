@@ -8,7 +8,7 @@ import java.net.URL
 interface Request {
 
     enum class HTTPMethod(val value: String) {
-        post("POST"), get("GET")
+        post("POST"), get("GET"), delete("DELETE"), put("PUT")
     }
 
     sealed class InterchangeDataType {

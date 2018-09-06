@@ -26,7 +26,7 @@ class AppToken() {
             }
             val expirationDate = tokenFromStorage["EXPIRATION_DATE"]!!.crmFormatToDate()
 
-            return AppToken(tokenFromStorage["FIRST_TOKEN"]!!, tokenFromStorage["SECOND_TOKEN"]!!, tokenFromStorage["KEY_IDENTIFIER"]!!, expirationDate)
+            return AppToken(tokenFromStorage["FIRST_TOKEN"]!!, tokenFromStorage["SECOND_TOKEN"]!!, tokenFromStorage["KEY_IDENTIFIER"]!!, expirationDate)//, tokenFromStorage["AUTH_TOKEN"]!!
         }
     }
 
@@ -37,6 +37,8 @@ class AppToken() {
     private var keyIdentifier: String = ""
     var expirationDate: Date? = null
 
+//    var auth: String = ""
+
     val content: Triple<String, String, String>?
         get() {
             if (expirationDate == null) {
@@ -46,20 +48,23 @@ class AppToken() {
             return Triple(firstToken, secondToken, keyIdentifier)
         }
 
-    constructor(firstToken: String, secondToken: String, keyIdentifier: String, expirationDate: Date) : this() {
+    constructor(firstToken: String, secondToken: String, keyIdentifier: String, expirationDate: Date) : this() { //, auth: String
         this.firstToken = firstToken
         this.secondToken = secondToken
         this.keyIdentifier = keyIdentifier
         this.expirationDate = expirationDate
+//        this.auth = auth
     }
 
     constructor(str: String) : this() {
         try {
-            val jsonObject = JSONObject(str)
+            val jsonObject = JSONObject(str).getJSONObject("session")
             expirationDate = jsonObject.getSafeString("expired_at").crmFormatToDate()
             keyIdentifier = jsonObject.getSafeString("keyIdentifier")
             firstToken = jsonObject.getSafeString("securityToken0")
             secondToken = jsonObject.getSafeString("securityToken1")
+
+//            this.auth = JSONObject(str).getJSONObject("user").getSafeString("token")
 
         } catch (e: Exception) {
             Log.d("tAppToken", e.localizedMessage)
@@ -71,7 +76,7 @@ class AppToken() {
                 "FIRST_TOKEN" to firstToken,
                 "SECOND_TOKEN" to secondToken,
                 "KEY_IDENTIFIER" to keyIdentifier,
-                "EXPIRATION_DATE" to expirationDate!!.crmFormatToString())
+                "EXPIRATION_DATE" to expirationDate!!.crmFormatToString()) //,"AUTH_TOKEN" to auth
 
         SharedPreferenceHelper.getInstance(context).setAccessTokenDetail(accessTokenDetail)
     }

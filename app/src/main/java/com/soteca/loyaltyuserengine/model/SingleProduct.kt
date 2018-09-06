@@ -1,17 +1,14 @@
 package com.soteca.loyaltyuserengine.model
 
 import soteca.com.genisysandroid.framwork.model.EntityCollection
-import soteca.com.genisysandroid.framwork.model.EntityReference
 
 class SingleProduct : Product {
 
-    val auxiliaryProductsAdd: ArrayList<AuxiliaryProduct>
+    override val auxiliaryProductsAdd: ArrayList<AuxiliaryProduct>
         get() {
             var tem: ArrayList<AuxiliaryProduct> = ArrayList()
+            tem.addAll(auxiliaryProducts.filter { it.isSelect == true })
 
-            auxiliaryProducts?.let {
-                tem.addAll(it.filter { it.isSelect == false })
-            }
 
             return tem
         }
@@ -20,7 +17,7 @@ class SingleProduct : Product {
         get() = auxiliaryProducts.size > 0
 
     //    private var attribute: EntityCollection.Attribute? = null
-    private var auxiliaryProducts: ArrayList<AuxiliaryProduct> = ArrayList()
+//    override var auxiliaryProducts: ArrayList<AuxiliaryProduct> = ArrayList()
 
     constructor() : super()
 
@@ -47,6 +44,7 @@ class SingleProduct : Product {
         product.min = min
         product.max = max
         product.bundleId = bundleId
+        product.isAvailable = isAvailable
 
         auxiliaryProducts.forEach {
             product.auxiliaryProducts.add(it.clone() as AuxiliaryProduct)

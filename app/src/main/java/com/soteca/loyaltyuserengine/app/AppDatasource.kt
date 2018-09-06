@@ -1,15 +1,12 @@
 package com.soteca.loyaltyuserengine.app
 
-import android.content.Context
-import com.soteca.loyaltyuserengine.api.WebConfig
-import com.soteca.loyaltyuserengine.model.*
 import com.soteca.loyaltyuserengine.model.Annotation
+import com.soteca.loyaltyuserengine.model.DefaultEntity
 import com.soteca.loyaltyuserengine.util.ImageScaleType
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 import soteca.com.genisysandroid.framwork.model.EntityCollection
 import soteca.com.genisysandroid.framwork.model.EntityReference
 import soteca.com.genisysandroid.framwork.model.FetchExpression
-import soteca.com.genisysandroid.framwork.model.encoder.body.ActionRequest
 import soteca.com.genisysandroid.framwork.networking.Errors
 
 
@@ -21,7 +18,7 @@ interface AppDatasource {
 
     fun <T : BaseItem> getMultiple(type: T, alias: String, fetchExpression: FetchExpression, handler: (ArrayList<T>?, ArrayList<Annotation>?, Errors?) -> Unit)
 
-    fun getAnnotation(entityReference: EntityReference?, scaleType: ImageScaleType, handler: (Annotation?, Errors?) -> Unit)
+    fun getAnnotation(entityReference: EntityReference?, scaleType: ImageScaleType?, handler: (Annotation?, Errors?) -> Unit)
 
     fun getMultipleAnnotation(logicalName: String?, ids: ArrayList<String>?, scaleType: ImageScaleType, handler: (ArrayList<Annotation>?, Errors?) -> Unit)
 
@@ -32,7 +29,7 @@ interface AppDatasource {
     fun update(entity: EntityCollection.Entity, handler: (Boolean?, Errors?) -> Unit)
 }
 
-open class BaseItem() {
+open class BaseItem()  {
 
     constructor(attribute: EntityCollection.Attribute) : this()
 
@@ -44,13 +41,13 @@ open class BaseItem() {
     }
 }
 
-class AppDatasourceImp(val context: Context) : AppDatasource {
-
+class AppDatasourceImp(val connector: DynamicsConnector) : AppDatasource {
+    
     override fun <T : BaseItem> get(type: T, reference: EntityReference, handler: (T?, Errors?) -> Unit) {
         val primaryId = DefaultEntity(reference.logicalName!!).primaryIdAttribute
-        val expression = FetchExpression.fetct(count = 1, entityType = reference.logicalName!!, filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition(primaryId, FetchExpression.Operator.equal, reference.id)))
+        val expression = FetchExpression.fetch(count = 1, entityType = reference.logicalName!!, filter = FetchExpression.Filter.singleCondition(FetchExpression.Condition(primaryId, FetchExpression.Operator.equal, reference.id)))
 
-        DynamicsConnector.default(context).retrieveMultiple(expression) { entityCollection, errors ->
+        connector.retrieveMultiple(expression) { entityCollection, errors ->
 
             if (errors != null) {
                 handler(null, errors)
@@ -63,7 +60,7 @@ class AppDatasourceImp(val context: Context) : AppDatasource {
 
     override fun <T : BaseItem> getMultiple(type: T, fetchExpression: FetchExpression, handler: (ArrayList<T>?, Errors?) -> Unit) {
 
-        DynamicsConnector.default(context).retrieveMultiple(fetchExpression) { entityCollection, errors ->
+        connector.retrieveMultiple(fetchExpression) { entityCollection, errors ->
 
             if (errors != null) {
                 handler(null, errors)
@@ -82,7 +79,7 @@ class AppDatasourceImp(val context: Context) : AppDatasource {
 
     override fun <T : BaseItem> getMultiple(type: T, alias: String, fetchExpression: FetchExpression, handler: (ArrayList<T>?, ArrayList<Annotation>?, Errors?) -> Unit) {
 
-        DynamicsConnector.default(context).retrieveMultiple(fetchExpression) { entityCollection, errors ->
+        connector.retrieveMultiple(fetchExpression) { entityCollection, errors ->
 
             if (errors != null) {
                 handler(null, null, errors)
@@ -114,17 +111,21 @@ class AppDatasourceImp(val context: Context) : AppDatasource {
     }
 
 
-    override fun getAnnotation(entityReference: EntityReference?, scaleType: ImageScaleType, handler: (Annotation?, Errors?) -> Unit) {
+    override fun getAnnotation(entityReference: EntityReference?, scaleType: ImageScaleType?, handler: (Annotation?, Errors?) -> Unit) {
 
         val secondEntity = DefaultEntity(entityReference!!.logicalName!!)
-        val imageCondition = FetchExpression.Condition("subject", FetchExpression.Operator.like, "%${scaleType.subjectName()}%")
-
         val linkEntityCondition = FetchExpression.Condition(secondEntity.primaryIdAttribute, FetchExpression.Operator.equal, entityReference.id)
         val linkEntity = FetchExpression.LinkEntity(name = entityReference.logicalName!!, from = secondEntity.primaryIdAttribute, to = "objectid", filter = FetchExpression.Filter(FetchExpression.LogicalOperator.and, arrayListOf(linkEntityCondition)))
+        var expression: FetchExpression? = null
 
-        val expression = FetchExpression(FetchExpression.Entity(name = "annotation", linkEntities = arrayListOf(linkEntity), filter = FetchExpression.Filter(FetchExpression.LogicalOperator.and, arrayListOf(imageCondition))))
+        scaleType?.let {
+            var imageCondition = FetchExpression.Condition("subject", FetchExpression.Operator.like, "%${scaleType?.subjectName()}%")
+            expression = FetchExpression(FetchExpression.Entity(name = "annotation", linkEntities = arrayListOf(linkEntity), filter = FetchExpression.Filter(FetchExpression.LogicalOperator.and, arrayListOf(imageCondition))))
+        } ?: run {
+            expression = FetchExpression(entity = FetchExpression.Entity(name = "annotation", linkEntities = arrayListOf(linkEntity)))
+        }
 
-        DynamicsConnector.default(context).retrieveMultiple(expression, { entityCollection, errors ->
+        connector.retrieveMultiple(expression!!, { entityCollection, errors ->
 
             if (errors != null) {
                 handler(null, errors)
@@ -155,7 +156,7 @@ class AppDatasourceImp(val context: Context) : AppDatasource {
         val linkEntity = FetchExpression.LinkEntity(name = logicalName, from = secondEntity.primaryIdAttribute, to = "objectid", filter = FetchExpression.Filter(FetchExpression.LogicalOperator.and, arrayListOf(linkEntityCondition)))
         val expression = FetchExpression(FetchExpression.Entity(name = "annotation", linkEntities = arrayListOf(linkEntity), filter = FetchExpression.Filter(FetchExpression.LogicalOperator.and, arrayListOf(imageCondition))))
 
-        DynamicsConnector.default(context).retrieveMultiple(expression, { entityCollection, errors ->
+        connector.retrieveMultiple(expression, { entityCollection, errors ->
 
             if (errors != null) {
                 handler(null, errors)
@@ -174,7 +175,7 @@ class AppDatasourceImp(val context: Context) : AppDatasource {
 
     override fun create(entity: EntityCollection.Entity, handler: (String?, Errors?) -> Unit) {
 
-        DynamicsConnector.default(context).create(entity, { id, errors ->
+        connector.create(entity, { id, errors ->
 
             if (errors != null) {
                 handler(null, errors)
@@ -188,7 +189,7 @@ class AppDatasourceImp(val context: Context) : AppDatasource {
 
     override fun delete(logicalName: String, id: String, handler: (Boolean?, Errors?) -> Unit) {
 
-        DynamicsConnector.default(context).delete(logicalName, id, { delete, errors ->
+        connector.delete(logicalName, id, { delete, errors ->
 
             if (errors != null) {
                 handler(null, errors)
@@ -202,14 +203,14 @@ class AppDatasourceImp(val context: Context) : AppDatasource {
 
     override fun update(entity: EntityCollection.Entity, handler: (Boolean?, Errors?) -> Unit) {
 
-        DynamicsConnector.default(context).update(entity, { isUpdated, errors ->
+        connector.update(entity, { isUpdated, errors ->
 
             if (errors != null) {
                 handler(null, errors)
                 return@update
             }
 
-            handler(isUpdated, errors)
+            handler(isUpdated, null)
 
         })
     }

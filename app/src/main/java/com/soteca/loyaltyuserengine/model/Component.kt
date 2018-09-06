@@ -16,10 +16,10 @@ class Component() : BaseItem() {
     var applyToId: String = ""
 
     constructor(attribute: EntityCollection.Attribute) : this() {
-        id = attribute!!["idcrm_poscomponentid"]!!.associatedValue.toString()
-        name = attribute!!["idcrm_name"]!!.associatedValue.toString()
-        productId = (attribute!!["idcrm_product"]!!.associatedValue as EntityReference).id!!
-        applyToId = (attribute!!["idcrm_applyto"]!!.associatedValue as EntityReference).id!!
+        id = attribute["idcrm_poscomponentid"]!!.associatedValue.toString()
+        name = attribute["idcrm_name"]!!.associatedValue.toString()
+        productId = (attribute["idcrm_product"]!!.associatedValue as EntityReference).id!!
+        applyToId = (attribute["idcrm_applyto"]!!.associatedValue as EntityReference).id!!
     }
 
     override fun initContructor(attribute: EntityCollection.Attribute): BaseItem {
