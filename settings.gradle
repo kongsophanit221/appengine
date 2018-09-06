@@ -1,1 +1,1 @@
-include ':app', ':dynamicsconnector'
+include ':app', ':dynamicsconnector', ':appengine'

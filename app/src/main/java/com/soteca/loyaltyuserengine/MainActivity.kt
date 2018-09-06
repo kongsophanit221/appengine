@@ -2,11 +2,6 @@ package com.soteca.loyaltyuserengine
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import com.soteca.loyaltyuserengine.api.WebAPI
-import com.soteca.loyaltyuserengine.app.Datasource
-import com.soteca.loyaltyuserengine.model.CartOrder
-import soteca.com.genisysandroid.framwork.connector.DynamicsConfiguration
-import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 
 
 class MainActivity : AppCompatActivity() {
