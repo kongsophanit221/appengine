@@ -5,6 +5,7 @@ import com.soteca.loyaltyuserengine.api.WebAPI
 import com.soteca.loyaltyuserengine.model.*
 import com.soteca.loyaltyuserengine.model.Annotation
 import com.soteca.loyaltyuserengine.util.ImageScaleType
+import soteca.com.appengine.model.Spending
 import soteca.com.genisysandroid.framwork.connector.DynamicsConfiguration
 import soteca.com.genisysandroid.framwork.connector.DynamicsConnector
 import soteca.com.genisysandroid.framwork.model.EntityCollection
@@ -827,6 +828,34 @@ class Datasource {
             }
             handler(promotions, null)
         })
+    }
+
+
+    // 14 September 2018 - Modified by Rasy
+    fun getSpendings(cardId: String, count: Int, page: Int, pagingCookies: String? = null, handler: (ArrayList<Spending>?, String?, Error?) -> Unit) {
+        val customerId = User.current().cardId
+
+        if (customerId == "") {
+            handler(null, null, Error("Customer Id null"))
+            return
+        }
+        val cardIdCondition = FetchExpression.Condition(attribute = "idcrm_loyaltycard", operator = FetchExpression.Operator.equal, value = cardId)
+        val entity = FetchExpression.Entity(name = "idcrm_spending",
+                filter = FetchExpression.Filter.andConditions(arrayListOf(FetchExpression.Condition(attribute = "idcrm_venue", operator = FetchExpression.Operator.equal, value = "E9B33228-DB04-E811-818B-E0071B659EF1"), cardIdCondition)), orders = arrayListOf(FetchExpression.Order(attribute = "modifiedon", descending = true)))
+        val expression = FetchExpression(count = count, page = page, pagingCookie = pagingCookies, entity = entity)
+
+        appData.connector.retrieveMultiple(expression) { entityCollection, errors ->
+            if (errors != null) {
+                handler(null, null, Error(errors.error))
+                return@retrieveMultiple
+            }
+            entityCollection?.entityList?.let {
+                val spendings = it.map { Spending(it.attribute!!) }.toMutableList()
+                handler(ArrayList(spendings), entityCollection.pagingCookie, null)
+            } ?: run {
+                handler(null, null, null)
+            }
+        }
     }
 
     fun getContactImage(contactId: String, handler: (Annotation?, Errors?) -> Unit) {
